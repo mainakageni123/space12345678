@@ -27,8 +27,8 @@ const serverless = require('serverless-http');
 // Load environment variables
 require('dotenv').config({ path: path.join(__dirname, '../../backend/.env') });
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || '';
+// MongoDB Connection - check multiple possible env var names for flexibility
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGO_URI || '';
 const DB_NAME = process.env.DB_NAME || 'car-hire';
 mongoose.set('strictQuery', false);
 
