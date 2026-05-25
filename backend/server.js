@@ -229,11 +229,11 @@ app.use((req, res) => {
 
 // Ensure all error responses are JSON
 app.use((err, req, res, next) => {
-    console.error('Error:', err.stack);
-    res.status(err.status || 500).json({
+    console.error('Error:', err.message, err.stack);
+    const status = err.status || err.http_code || 500;
+    res.status(status).json({
         success: false,
-        message: err.message || 'Something went wrong!',
-        error: err.stack
+        message: err.message || 'Something went wrong!'
     });
 });
 

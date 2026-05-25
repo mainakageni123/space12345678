@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const Adventure = require('../models/Adventure');
 const authMiddleware = require('../middleware/auth');
 const { normalizeAdventureData } = require('../utils/normalizeAdventure');
-const { storage, cloudinary } = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
+const { singleImageUpload } = require('../middleware/cloudinaryUpload');
 const mongoose = require('mongoose');
-
-const upload = multer({ storage: storage });
 
 // List all adventures
 router.get('/', async (req, res) => {
@@ -63,7 +61,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create (admin only)
-router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
+router.post('/', authMiddleware, singleImageUpload, async (req, res) => {
     try {
         const adventureData = { ...req.body };
         
@@ -100,7 +98,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
 });
 
 // Update (admin only)
-router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
+router.put('/:id', authMiddleware, singleImageUpload, async (req, res) => {
     try {
         const adventureData = { ...req.body };
         

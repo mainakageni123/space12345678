@@ -1,33 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
 const Vehicle = require('../models/Vehicle');
 const authMiddleware = require('../middleware/auth');
 const mongoose = require('mongoose');
-const { storage, cloudinary } = require('../config/cloudinary');
-
-const upload = multer({ storage: storage });
-
-// Update: allow up to 4 images and support single 'image' field as well
-const multiUpload = (req, res, next) => {
-    const arrayUploader = upload.array('images', 10);
-    const singleUploader = upload.single('image');
-
-    // Try array uploader first
-    arrayUploader(req, res, function (err) {
-        if (err) return next(err);
-        if (req.files && req.files.length > 0) return next();
-        // Fallback to single file handler
-        singleUploader(req, res, function (err2) {
-            if (err2) return next(err2);
-            // Normalize to req.files for downstream code
-            if (req.file) {
-                req.files = [req.file];
-            }
-            return next();
-        });
-    });
-};
+const { cloudinary } = require('../config/cloudinary');
+const { multiImageUpload } = require('../middleware/cloudinaryUpload');
 
 // Get all vehicles
 router.get('/', async (req, res) => {
@@ -113,7 +90,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new vehicle (admin only)
-router.post('/', authMiddleware, multiUpload, async (req, res) => {
+router.post('/', authMiddleware, multiImageUpload, async (req, res) => {
     try {
         console.log('Vehicle creation request received');
         console.log('Body:', req.body);
@@ -142,8 +119,7 @@ router.post('/', authMiddleware, multiUpload, async (req, res) => {
             });
         }
 
-        // Use Cloudinary URLs
-        // req.files would have .path (which is the Cloudinary URL) due to multer-storage-cloudinary
+        // Cloudinary URLs from upload middleware (req.files[].path)
         const image = req.files[0].path;
         const images = req.files.map(f => f.path);
 
@@ -229,7 +205,7 @@ router.post('/', authMiddleware, multiUpload, async (req, res) => {
 });
 
 // Update a vehicle (admin only)
-router.put('/:id', authMiddleware, multiUpload, async (req, res) => {
+router.put('/:id', authMiddleware, multiImageUpload, async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.id);
         if (!vehicle) {
