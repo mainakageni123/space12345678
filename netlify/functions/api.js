@@ -24,8 +24,10 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const serverless = require('serverless-http');
 
-// Load environment variables
+// Load environment variables (local dev uses backend/.env; Netlify injects vars into process.env)
 require('dotenv').config({ path: path.join(__dirname, '../../backend/.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+require('dotenv').config();
 
 // MongoDB Connection - check multiple possible env var names for flexibility
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGO_URI || '';
@@ -264,8 +266,19 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
+// Lightweight health check (no DB required) — use for Netlify deploy verification
+app.get(['/api/health', '/health'], (req, res) => {
+    res.json({
+        success: true,
+        status: 'ok',
+        environment: 'netlify-serverless',
+        hasMongoUri: Boolean(MONGODB_URI),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Test database connection endpoint (unchanged from original)
-app.get('/api/test-db', async (req, res) => {
+app.get(['/api/test-db', '/test-db'], async (req, res) => {
     try {
         await connectDB();
         

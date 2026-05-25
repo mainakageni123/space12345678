@@ -78,6 +78,11 @@
 
 # Functions configuration
 [functions]
-  # Set a longer timeout for database operations
   node_bundler = "esbuild"
   included_files = ["backend/**"]
+  # Mongoose has native bindings — keep external so Netlify bundles correctly
+  external_node_modules = ["mongoose"]
+
+[functions."api"]
+  # Free tier max is 10s; Pro plans can use up to 26
+  timeout = 10
