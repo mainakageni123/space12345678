@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
-import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import VehicleImageCarousel from '../../../components/VehicleImageCarousel';
 import { useVehicles } from '../../../contexts/VehicleContext';
+import { mapVehicle } from '../../../utils/mapVehicle';
 import VehicleDetailModal from '../../fleet-discovery/components/VehicleDetailModal';
 
 const FeaturedVehicles = () => {
@@ -28,33 +29,25 @@ const FeaturedVehicles = () => {
 
   // Get the 3 most expensive vehicles that are available
   const featuredVehicles = useMemo(() => {
-    console.log('Processing featured vehicles from:', vehicles);
     return vehicles
-      .filter(vehicle => vehicle.available !== false) // Filter available vehicles
+      .filter((vehicle) => vehicle.available !== false && vehicle.availability !== false)
       .sort((a, b) => {
-        // Sort by price in descending order (highest first)
         const priceA = a.price || a.pricePerDay || 0;
         const priceB = b.price || b.pricePerDay || 0;
         return priceB - priceA;
       })
-      .slice(0, 3) // Take only the top 3 most expensive vehicles
-      .map(vehicle => {
-        const mapped = {
-          id: vehicle._id || vehicle.id,
+      .slice(0, 3)
+      .map((vehicle) => {
+        const mapped = mapVehicle(vehicle);
+        return {
+          ...mapped,
           name: vehicle.name,
-          make: vehicle.make,
-          model: vehicle.model,
-          category: vehicle.category || vehicle.type,
-          price: vehicle.pricePerDay ?? vehicle.price ?? 0,
-          image: vehicle.images?.[0] || vehicle.imageUrl || vehicle.image || '/assets/images/no_image.png',
-          available: vehicle.available,
-          availability: vehicle.available ? "Available Now" : "Details",
-          seats: vehicle.seats ?? vehicle.passengers,
-          fuelType: vehicle.fuelType,
-          transmission: vehicle.transmission,
+          price: mapped.price ?? vehicle.pricePerDay ?? vehicle.price ?? 0,
+          availability: mapped.available ? 'Available Now' : 'Details',
+          seats: mapped.seats ?? vehicle.passengers,
+          fuelType: mapped.fuelType,
+          transmission: mapped.transmission
         };
-        console.log('Mapped featured vehicle:', mapped, 'from:', vehicle);
-        return mapped;
       });
   }, [vehicles]);
 
@@ -70,22 +63,8 @@ const FeaturedVehicles = () => {
   };
 
   const handleViewDetails = (vehicle) => {
-    // Map the vehicle data to match what VehicleDetailModal expects
-    // Find the full vehicle data from the vehicles array
-    const fullVehicle = vehicles.find(v => (v._id || v.id) === vehicle.id) || vehicle;
-    
-    const mappedVehicle = {
-      ...fullVehicle,
-      pricePerDay: fullVehicle.price || fullVehicle.pricePerDay || vehicle.price,
-      passengers: fullVehicle.seats || fullVehicle.passengers || vehicle.seats,
-      available: fullVehicle.available,
-      images: fullVehicle.images || (fullVehicle.image ? [fullVehicle.image] : [vehicle.image]),
-      type: fullVehicle.type || fullVehicle.category,
-      year: fullVehicle.year
-    };
-    
-    console.log('Opening modal with vehicle:', mappedVehicle);
-    setSelectedVehicle(mappedVehicle);
+    const fullVehicle = vehicles.find((v) => (v._id || v.id) === vehicle.id) || vehicle._raw || vehicle;
+    setSelectedVehicle(mapVehicle(fullVehicle) || vehicle);
     setIsModalOpen(true);
   };
 
@@ -144,41 +123,30 @@ const FeaturedVehicles = () => {
               >
                 <div 
                   onClick={() => handleViewDetails(vehicle)}
-                  className="bg-surface-premium rounded-xl lg:rounded-2xl overflow-hidden premium-shadow hover:deep-shadow brand-transition group cursor-pointer"
+                  className="bg-surface-premium rounded-xl lg:rounded-2xl overflow-hidden premium-shadow hover:deep-shadow brand-transition group cursor-pointer relative"
                 >
-                  {/* Availability Badge */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                      <div className={`w-2 h-2 rounded-full ${vehicle?.availability === 'Available Now' ? 'bg-success' : 'bg-warning'}`} />
-                      <span className="text-xs font-medium text-cosmic-depth">{vehicle?.availability}</span>
-                    </div>
-                  </div>
-                  {/* Vehicle Image */}
-                  <div className="relative h-48 lg:h-64 overflow-hidden">
-                    <Image
-                      src={vehicle?.image}
+                  <div className="relative">
+                    <VehicleImageCarousel
+                      images={vehicle?.images || []}
                       alt={`${vehicle?.make} ${vehicle?.model}`}
-                      className="w-full h-full object-cover group-hover:scale-105 brand-transition duration-700"
+                      className="relative h-48 lg:h-64 overflow-hidden"
                     />
-                    
-                    {/* Price Badge */}
-                    <div className="absolute top-4 right-4">
+
+                    <div className="absolute top-4 right-4 z-10 pointer-events-none">
                       <div className="bg-stellar-gold text-cosmic-depth px-3 py-1 rounded-full text-sm font-semibold">
                         KSH {vehicle?.price?.toLocaleString()}/day
                       </div>
                     </div>
-                    
-                    {/* Category Badge */}
-                    <div className="absolute top-4 left-4">
+
+                    <div className="absolute top-4 left-4 z-10 pointer-events-none">
                       <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
                         {vehicle?.category || 'Premium'}
                       </div>
                     </div>
 
-                    {/* Availability Status */}
-                    <div className="absolute bottom-4 left-4">
+                    <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
                       <div className="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                        <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                        <div className={`w-2 h-2 rounded-full ${vehicle?.availability === 'Available Now' ? 'bg-success animate-pulse' : 'bg-warning'}`} />
                         <span className="text-xs font-medium text-cosmic-depth">{vehicle?.availability}</span>
                       </div>
                     </div>
