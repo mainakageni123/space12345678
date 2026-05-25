@@ -1,21 +1,19 @@
 # Netlify Configuration for SpaceBorne Car Hire
 # This configuration deploys both frontend and backend as a unified application
 
-[build]
-  # Base directory for the project
-  base = "car-hire-main123/car-hire-main"
-  # Build command (relative to base)
-  command = "npm run build"
-  # Directory containing built files (relative to base)
-  publish = "dist"
-  # Functions directory (relative to base)
-  functions = "netlify/functions"
-
 [build.environment]
   # Node version for build and runtime
-  NODE_VERSION = "18"
-  # Force npm to install devDependencies (needed for Vite)
+  NODE_VERSION = "20"
+  # Force npm to install ALL dependencies (including devDependencies) during build
   NPM_CONFIG_PRODUCTION = "false"
+
+[build]
+  # Build command for the frontend (Vite)
+  command = "npm run build"
+  # Directory containing the built frontend files
+  publish = "dist"
+  # Functions directory for serverless backend
+  functions = "netlify/functions"
 
 # Redirect all API requests to the serverless function
 [[redirects]]

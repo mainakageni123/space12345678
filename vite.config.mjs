@@ -9,6 +9,15 @@ export default defineConfig({
   build: {
     outDir: "dist",
     chunkSizeWarningLimit: 2000,
+    reportCompressedSize: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          ui: ["framer-motion", "lucide-react"],
+        },
+      },
+    },
   },
   plugins: [tsconfigPaths(), react()],
   server: {
