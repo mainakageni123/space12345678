@@ -1,10 +1,11 @@
 import { API_BASE_URL } from '../config/api';
+import { optimizeCloudinaryUrl } from './cloudinaryUrl';
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
 
 const toAbsoluteUrl = (maybeRelative) => {
   if (!maybeRelative) return undefined;
-  if (/^https?:\/\//i.test(maybeRelative)) return maybeRelative;
+  if (/^https?:\/\//i.test(maybeRelative)) return optimizeCloudinaryUrl(maybeRelative);
   // If it's just a filename (no slash), prepend /uploads/
   if (!maybeRelative.startsWith('/')) {
     return `${API_ORIGIN}/uploads/${maybeRelative}`;

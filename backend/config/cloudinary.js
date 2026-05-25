@@ -14,12 +14,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'car-hire',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'gif'],
-    transformation: [
-      { width: 1000, crop: 'limit' },
-      { fetch_format: 'auto' },
-      { quality: 'auto' }
-    ]
+    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
+    // Do NOT include transformation here — it breaks signed uploads (Invalid Signature).
   }
 });
 
