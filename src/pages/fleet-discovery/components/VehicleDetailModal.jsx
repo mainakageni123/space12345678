@@ -19,8 +19,40 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
     return list.length > 0 ? list : ['/assets/images/no_image.png'];
   }, [vehicle]);
 
+  const pricingTiers = useMemo(() => {
+    if (!vehicle?.pricing) return [];
+    return [
+      { id: 'hourly1', label: '1 Hour', value: vehicle.pricing.hourly1, duration: '1 Hour' },
+      { id: 'hourly3', label: '3 Hours', value: vehicle.pricing.hourly3, duration: '3 Hours' },
+      { id: 'hourly6', label: '6 Hours', value: vehicle.pricing.hourly6, duration: '6 Hours' },
+      { id: 'hourly12', label: '12 Hours', value: vehicle.pricing.hourly12, duration: '12 Hours' },
+      { id: 'daily', label: '24 Hours / Daily', value: vehicle.pricing.daily || vehicle.pricePerDay, duration: '24 Hours' },
+      { id: 'daily2', label: '48 Hours (2 Days)', value: vehicle.pricing.daily2, duration: '48 Hours' },
+      { id: 'daily3', label: '72 Hours (3 Days)', value: vehicle.pricing.daily3, duration: '72 Hours' }
+    ].filter((tier) => tier.value !== undefined && tier.value !== null && tier.value !== '');
+  }, [vehicle]);
+
+  const footerPricing = useMemo(() => {
+    if (selectedTier?.value != null) {
+      return {
+        amount: Number(selectedTier.value),
+        label: selectedTier.label
+      };
+    }
+    const daily = pricingTiers.find((t) => t.id === 'daily');
+    if (daily) {
+      return { amount: Number(daily.value), label: daily.label };
+    }
+    const fallback = vehicle?.pricePerDay ?? vehicle?.price;
+    return {
+      amount: fallback != null ? Number(fallback) : null,
+      label: 'Per day'
+    };
+  }, [selectedTier, pricingTiers, vehicle]);
+
   useEffect(() => {
     setCurrentImageIndex(0);
+    setSelectedTier(null);
   }, [vehicle?.id, isOpen]);
 
   if (!isOpen || !vehicle) return null;
@@ -229,19 +261,9 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                       Hiring Rates (KES)
                     </h4>
                     
-                    {vehicle.pricing && Object.values(vehicle.pricing).some(val => val !== undefined && val !== null && val !== '') ? (
+                    {pricingTiers.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        {[
-                          { id: 'hourly1', label: '1 Hour', value: vehicle.pricing.hourly1, duration: '1 Hour' },
-                          { id: 'hourly3', label: '3 Hours', value: vehicle.pricing.hourly3, duration: '3 Hours' },
-                          { id: 'hourly6', label: '6 Hours', value: vehicle.pricing.hourly6, duration: '6 Hours' },
-                          { id: 'hourly12', label: '12 Hours', value: vehicle.pricing.hourly12, duration: '12 Hours' },
-                          { id: 'daily', label: '24 Hours / Daily', value: vehicle.pricing.daily || vehicle.pricePerDay, duration: '24 Hours' },
-                          { id: 'daily2', label: '48 Hours (2 Days)', value: vehicle.pricing.daily2, duration: '48 Hours' },
-                          { id: 'daily3', label: '72 Hours (3 Days)', value: vehicle.pricing.daily3, duration: '72 Hours' }
-                        ]
-                        .filter(tier => tier.value !== undefined && tier.value !== null && tier.value !== '')
-                        .map((tier) => (
+                        {pricingTiers.map((tier) => (
                           <div 
                             key={tier.id}
                             onClick={() => setSelectedTier(tier)}
@@ -315,9 +337,15 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xl sm:text-2xl font-bold text-cosmic-depth">
-                    {vehicle?.price?.toLocaleString()} KES/day
+                    {footerPricing.amount != null
+                      ? `KES ${footerPricing.amount.toLocaleString()}`
+                      : 'Price on request'}
                   </p>
                   <p className="text-sm text-text-refined">
+                    {footerPricing.label}
+                    {selectedTier ? '' : pricingTiers.length > 0 ? ' · tap a rate above' : ''}
+                  </p>
+                  <p className="text-xs text-text-refined mt-0.5">
                     {vehicle?.available ? 'Available now' : 'Currently unavailable'}
                   </p>
                 </div>
