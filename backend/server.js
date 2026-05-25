@@ -230,10 +230,15 @@ app.use((req, res) => {
 // Ensure all error responses are JSON
 app.use((err, req, res, next) => {
     console.error('Error:', err.message, err.stack);
-    const status = err.status || err.http_code || 500;
+    const isCloudinary = /cloudinary|signature|api_secret/i.test(String(err.message || ''));
+    const status = isCloudinary ? 500 : (err.status && err.status !== 401 ? err.status : err.http_code && err.http_code !== 401 ? err.http_code : 500);
     res.status(status).json({
         success: false,
-        message: err.message || 'Something went wrong!'
+        message: isCloudinary
+            ? (err.message?.includes('api_secret') || err.message?.includes('Signature')
+                ? 'Image upload failed: check CLOUDINARY_API_SECRET in backend/.env matches your Cloudinary dashboard.'
+                : `Image upload failed: ${err.message}`)
+            : (err.message || 'Something went wrong!')
     });
 });
 

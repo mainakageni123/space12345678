@@ -20,8 +20,16 @@ const SpecBox = ({ icon, label, value }) => (
 
 const VehicleCard = ({ vehicle, onViewDetails, onBookNow }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
 
-  const images = vehicle?.images?.length > 0 ? vehicle.images : [];
+  const images = (() => {
+    if (vehicle?.images?.length > 0) {
+      return vehicle.images.filter(Boolean);
+    }
+    if (vehicle?.imageUrl) return [vehicle.imageUrl];
+    if (vehicle?.image && typeof vehicle.image === 'string') return [vehicle.image];
+    return [];
+  })();
 
   const nextImage = (e) => {
     e?.stopPropagation();
@@ -41,6 +49,20 @@ const VehicleCard = ({ vehicle, onViewDetails, onBookNow }) => {
     if (onViewDetails) onViewDetails(vehicle);
   };
 
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null || images.length < 2) return;
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) nextImage();
+      else prevImage();
+    }
+    setTouchStartX(null);
+  };
+
   return (
     <div
       role="button"
@@ -58,6 +80,8 @@ const VehicleCard = ({ vehicle, onViewDetails, onBookNow }) => {
       <div
         className="relative w-full bg-gray-100 overflow-hidden"
         style={{ paddingBottom: '68%' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="absolute inset-0">
           {images.length > 0 ? (
@@ -89,11 +113,12 @@ const VehicleCard = ({ vehicle, onViewDetails, onBookNow }) => {
 
         {/* Carousel arrows */}
         {images.length > 1 && (
-          <div className="hidden sm:block">
+          <>
             <button
               type="button"
               onClick={prevImage}
               className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition z-10"
+              aria-label="Previous image"
             >
               <Icon name="ChevronLeft" size={18} />
             </button>
@@ -101,10 +126,11 @@ const VehicleCard = ({ vehicle, onViewDetails, onBookNow }) => {
               type="button"
               onClick={nextImage}
               className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition z-10"
+              aria-label="Next image"
             >
               <Icon name="ChevronRight" size={18} />
             </button>
-          </div>
+          </>
         )}
 
         {/* Dots — bottom centre */}

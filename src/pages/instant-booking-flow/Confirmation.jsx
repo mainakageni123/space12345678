@@ -10,9 +10,9 @@ const Confirmation = () => {
   // Extract booking details from state
   const bookingData = state?.bookingData || {};
   const bookingType = state?.bookingType || 'vehicle';
-  const totalAmount = bookingType === 'adventure' 
-    ? bookingData.adventurePrice 
-    : bookingData.vehiclePrice;
+  const totalAmount = bookingType === 'adventure'
+    ? Number(bookingData.adventurePrice ?? 0)
+    : Number(bookingData.vehiclePrice ?? 0);
   
   const displayName = bookingType === 'adventure'
     ? bookingData.adventureTitle

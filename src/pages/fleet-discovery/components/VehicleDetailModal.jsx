@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
@@ -8,18 +8,22 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedTier, setSelectedTier] = useState(null);
 
-  if (!isOpen || !vehicle) return null;
+  const vehicleImages = useMemo(() => {
+    const list = [];
+    const add = (src) => {
+      if (src && typeof src === 'string' && !list.includes(src)) list.push(src);
+    };
+    if (Array.isArray(vehicle?.images)) vehicle.images.forEach(add);
+    add(vehicle?.imageUrl);
+    add(vehicle?.image);
+    return list.length > 0 ? list : ['/assets/images/no_image.png'];
+  }, [vehicle]);
 
-  // Ensure we have images array, fallback to single image or placeholder
-  const vehicleImages = vehicle?.images && vehicle.images.length > 0 
-    ? vehicle.images 
-    : vehicle?.imageUrl 
-    ? [vehicle.imageUrl]
-    : vehicle?.image
-    ? [vehicle.image]
-    : ['/assets/images/no_image.png'];
-  
-  console.log('Vehicle images in modal:', vehicleImages);
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [vehicle?.id, isOpen]);
+
+  if (!isOpen || !vehicle) return null;
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: 'Info' },
@@ -91,7 +95,23 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
               </div>
             </div>
 
-            {/* Thumbnail Strip */}
+            {/* Thumbnail strip + dots */}
+            {vehicleImages.length > 1 && (
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 lg:hidden">
+                {vehicleImages.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === currentImageIndex ? 'w-4 bg-cyan-400' : 'w-1.5 bg-white/70'
+                    }`}
+                    aria-label={`Image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="flex space-x-2 p-4 overflow-x-auto">
               {vehicleImages.map((image, index) => (
                 <button

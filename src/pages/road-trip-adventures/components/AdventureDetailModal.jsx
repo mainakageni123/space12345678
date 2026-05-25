@@ -208,8 +208,7 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
                       Price (KES)
                     </h4>
                     <p className="text-2xl font-bold text-cosmic-depth">
-                      {adventure?.price ? Number(adventure.price).toLocaleString() : 'Contact us'}
-                      {adventure?.price ? <span className="text-sm font-normal text-text-refined"> per person</span> : null}
+                      {adventure?.price ? `KES ${Number(adventure.price).toLocaleString()}` : 'Contact us'}
                     </p>
                   </div>
                 </div>

@@ -21,27 +21,22 @@ export function mapVehicle(apiVehicle) {
   const derivedMake = firstWord || 'Vehicle';
   const derivedModel = restWords.length > 0 ? restWords.join(' ') : firstWord || name;
 
-  // Handle various possible image formats
-  let images = [];
-  
-  // Handle imageUrls array from backend (preferred)
-  if (Array.isArray(apiVehicle?.imageUrls) && apiVehicle.imageUrls.length > 0) {
-    images = apiVehicle.imageUrls.map(toAbsoluteUrl);
+  // Collect every image URL (primary + gallery) — order: images[] first, then image, imageUrls
+  const images = [];
+  const addImage = (src) => {
+    const url = toAbsoluteUrl(src);
+    if (url && !images.includes(url)) images.push(url);
+  };
+  if (Array.isArray(apiVehicle?.images)) {
+    apiVehicle.images.forEach((img) => {
+      if (typeof img === 'string') addImage(img);
+    });
   }
-  // Handle image URLs
-  else if (apiVehicle?.imageUrl) {
-    images = [toAbsoluteUrl(apiVehicle.imageUrl)];
+  if (typeof apiVehicle?.image === 'string') addImage(apiVehicle.image);
+  if (Array.isArray(apiVehicle?.imageUrls)) {
+    apiVehicle.imageUrls.forEach(addImage);
   }
-  // Legacy image field
-  else if (apiVehicle?.image) {
-    if (typeof apiVehicle.image === 'string') {
-      images = [toAbsoluteUrl(apiVehicle.image)];
-    }
-  }
-  // Images array
-  else if (Array.isArray(apiVehicle?.images) && apiVehicle.images.length > 0) {
-    images = apiVehicle.images.map(toAbsoluteUrl);
-  }
+  if (apiVehicle?.imageUrl) addImage(apiVehicle.imageUrl);
 
   return {
     id: apiVehicle?._id || apiVehicle?.id,

@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Icon from '../../components/AppIcon';
 import { API_BASE_URL } from '../../config/api';
+import { getAdventurePrice, formatKes } from '../../utils/adventurePricing';
 
 const InstantBookingFlow = () => {
   const navigate = useNavigate();
@@ -25,13 +26,15 @@ const InstantBookingFlow = () => {
   console.log('Selected Adventure:', selectedAdventure);
   
   // Extract booking details based on type
+  const adventurePrice = bookingType === 'adventure' ? getAdventurePrice(selectedAdventure) : 0;
+
   const bookingDetails = bookingType === 'adventure' ? {
     id: selectedAdventure.id,
     name: selectedAdventure.title,
     description: selectedAdventure.location,
-    price: selectedAdventure.price,
+    price: adventurePrice,
     icon: 'MapPin',
-    priceLabel: 'Total Price',
+    priceLabel: 'Amount to pay',
     color: 'from-purple-600 to-purple-700'
   } : {
     id: selectedVehicle?.id || '',
@@ -94,8 +97,8 @@ const InstantBookingFlow = () => {
         bookingData.adventureId = bookingDetails.id;
         bookingData.adventureTitle = selectedAdventure.title;
         bookingData.adventureLocation = selectedAdventure.location;
-        bookingData.adventurePrice = bookingDetails.price;
-        bookingData.numberOfParticipants = 1; // Default to 1 person per booking
+        bookingData.numberOfParticipants = 1;
+        // Price is resolved on the server from the adventure record (matches listing price)
         bookingData.preferredDate = new Date().toISOString().split('T')[0];
       } else {
         bookingData.vehicleId = bookingDetails.id;
@@ -327,7 +330,7 @@ const InstantBookingFlow = () => {
                   {/* Price */}
                   <div className="text-right">
                     <p className="text-white/80 text-xs">{bookingDetails.priceLabel}</p>
-                    <p className="text-xl font-bold">KES {bookingDetails.price?.toLocaleString()}</p>
+                    <p className="text-xl font-bold">{formatKes(bookingDetails.price)}</p>
                   </div>
                 </div>
               </div>

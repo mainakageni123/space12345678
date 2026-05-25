@@ -232,7 +232,7 @@ const FeaturedTrips = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-text-refined">Regular Package</span>
-                    <span className="text-sm text-text-refined">KSH {(trip?.price?.regular * 100).toLocaleString()}</span>
+                    <span className="text-sm text-text-refined">KSH {trip?.price?.regular?.toLocaleString()}</span>
                   </div>
                 </div>
 

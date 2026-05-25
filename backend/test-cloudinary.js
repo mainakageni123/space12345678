@@ -56,7 +56,7 @@ cloudinary.api.ping()
   .catch(error => {
     console.error('❌ Cloudinary connection failed!\n');
     console.error('Error Details:');
-    console.error(`   Message: ${error.message}`);
+    console.error(`   Message: ${error.message || error.error?.message || JSON.stringify(error)}`);
     
     if (error.http_code === 401) {
       console.error('\n💡 This usually means:');

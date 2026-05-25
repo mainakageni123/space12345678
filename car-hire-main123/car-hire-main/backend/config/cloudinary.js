@@ -1,8 +1,8 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const dotenv = require('dotenv');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,20 +10,21 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'car-hire',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'gif'],
-    transformation: [
-      { width: 1000, crop: 'limit' },
-      { fetch_format: 'auto' },
-      { quality: 'auto' }
-    ]
-  }
-});
+const UPLOAD_FOLDER = process.env.CLOUDINARY_FOLDER || 'car-hire';
+
+/** Server-side upload — no client signature; avoids multer-storage-cloudinary signing bugs. */
+function uploadBuffer(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: UPLOAD_FOLDER, resource_type: 'image' },
+      (err, result) => (err ? reject(err) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+}
 
 module.exports = {
   cloudinary,
-  storage
+  UPLOAD_FOLDER,
+  uploadBuffer
 };

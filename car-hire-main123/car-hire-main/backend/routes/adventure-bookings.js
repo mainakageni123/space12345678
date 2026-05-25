@@ -25,21 +25,35 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Check seat availability if adventureId is provided
+        const participants = Math.max(1, parseInt(numberOfParticipants, 10) || 1);
+        let resolvedTitle = req.body.adventureTitle;
+        let resolvedLocation = req.body.adventureLocation;
+        let resolvedPrice = null;
+
+        // Check seat availability and lock price from database (same as displayed on site)
         if (adventureId) {
             const adventure = await Adventure.findById(adventureId);
-            if (adventure) {
-                const requestedSeats = numberOfParticipants || 1;
-                const availableSeats = adventure.maxParticipants - adventure.bookedSeats;
-                
-                if (requestedSeats > availableSeats) {
-                    return res.status(400).json({
-                        success: false,
-                        error: `Only ${availableSeats} seat(s) available. You requested ${requestedSeats} seat(s).`,
-                        availableSeats
-                    });
-                }
+            if (!adventure) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Adventure not found'
+                });
             }
+
+            resolvedTitle = adventure.title;
+            resolvedLocation = adventure.location;
+            resolvedPrice = Number(adventure.price) || 0;
+
+            const availableSeats = adventure.maxParticipants - (adventure.bookedSeats || 0);
+            if (participants > availableSeats) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Only ${availableSeats} seat(s) available. You requested ${participants} seat(s).`,
+                    availableSeats
+                });
+            }
+        } else if (req.body.adventurePrice != null) {
+            resolvedPrice = Number(req.body.adventurePrice) || 0;
         }
 
         // Create booking
@@ -49,11 +63,11 @@ router.post('/', async (req, res) => {
             phoneNumber,
             email,
             status: 'pending',
-            ...(req.body.adventureId && { adventureId: req.body.adventureId }),
-            ...(req.body.adventureTitle && { adventureTitle: req.body.adventureTitle }),
-            ...(req.body.adventureLocation && { adventureLocation: req.body.adventureLocation }),
-            ...(req.body.adventurePrice && { adventurePrice: req.body.adventurePrice }),
-            ...(req.body.numberOfParticipants && { numberOfParticipants: req.body.numberOfParticipants }),
+            ...(adventureId && { adventureId }),
+            ...(resolvedTitle && { adventureTitle: resolvedTitle }),
+            ...(resolvedLocation && { adventureLocation: resolvedLocation }),
+            ...(resolvedPrice != null && { adventurePrice: resolvedPrice }),
+            numberOfParticipants: participants,
             ...(req.body.preferredDate && { preferredDate: req.body.preferredDate }),
             birthDate: req.body.birthDate,
             idNumber: req.body.idNumber,

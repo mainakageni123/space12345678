@@ -217,11 +217,11 @@ const AddVehicle = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        if (response.status === 401) {
+        const msg = result.message || 'Failed to add vehicle';
+        if (response.status === 401 && /token|auth|login|denied/i.test(msg)) {
           throw new Error('Authentication expired. Please log in again.');
-        } else {
-          throw new Error(result.message || 'Failed to add vehicle');
         }
+        throw new Error(msg);
       }
 
       if (response.ok && result.success) {

@@ -385,8 +385,8 @@ const AdventureManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="number"
-                label="Price (KSH)"
-                placeholder="Enter price in KSH"
+                label="Price to pay (KES total)"
+                placeholder="Amount customers will pay"
                 value={formData.price}
                 onChange={(e) => handleInputChange('price', e.target.value)}
                 required

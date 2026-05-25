@@ -171,6 +171,7 @@ const AdventureCard = ({ adventure, onViewDetails, onBookNow }) => {
           <div className="flex flex-col justify-center">
             <p className="text-[13px] sm:text-[17px] font-extrabold text-blue-700 leading-tight">
               {price ? `KES ${Number(price).toLocaleString()}` : 'Contact us'}
+              {price ? <span className="block text-[9px] font-normal text-gray-400">total price</span> : null}
             </p>
             <p className="text-[9px] sm:text-[11px] text-gray-400 leading-none mt-1">Negotiable</p>
           </div>

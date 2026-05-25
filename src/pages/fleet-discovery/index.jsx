@@ -10,7 +10,7 @@ import VehicleDetailModal from './components/VehicleDetailModal';
 import ImageLightbox from './components/ImageLightbox';
 import PricingModal from './components/PricingModal';
 import { useVehicles } from '../../contexts/VehicleContext';
-import { API_BASE_URL } from '../../config/api';
+import { mapVehicle } from '../../utils/mapVehicle';
 
 const FleetDiscovery = () => {
   const navigate = useNavigate();
@@ -42,85 +42,12 @@ const FleetDiscovery = () => {
 
   // Filter and sort vehicles from context
   const processedVehicles = useMemo(() => {
-    const API_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
-    console.log('Processing vehicles:', vehicles);
-    
-    return vehicles.map(v => {
-      console.log('Processing vehicle:', v);
-      const name = v?.name || '';
-      const make = v?.make || '';
-      const model = v?.model || '';
-
-      // Process image URLs - images are now Cloudinary URL strings directly in vehicle.image
-      // Handle both old format (Buffer objects) and new format (URL strings)
-      const getImageUrl = (imageObj) => {
-        if (!imageObj) return null;
-        
-        // If it's an object with data (old Buffer format), return null (can't display)
-        if (typeof imageObj === 'object' && imageObj.data) {
-          return null; // Old format - images need to be re-uploaded
-        }
-        
-        // If it's already a URL string (new format), use it directly
-        if (typeof imageObj === 'string') {
-          // Cloudinary URLs are already absolute, use as-is
-          if (/^https?:\/\//i.test(imageObj) || imageObj.startsWith('//') || imageObj.startsWith('blob:')) {
-            return imageObj;
-          }
-          // Relative URLs
-          if (imageObj.startsWith('/')) {
-            return API_ORIGIN + imageObj;
-          }
-          return API_ORIGIN + '/' + imageObj;
-        }
-        
-        return null;
-      };
-      
-      const primaryImage = getImageUrl(v?.image || v?.imageUrl);
-
+    return vehicles.map((v) => {
+      const mapped = v._raw ? mapVehicle(v._raw) : mapVehicle(v);
       return {
-        id: v?._id || v?.id,
-        make,
-        model,
-        year: v?.year,
-        class: v?.type || v?.category,
-        category: v?.type || v?.category,
-        description: v?.description,
-        pricePerDay: v?.price ?? v?.dailyRate,
-        originalPrice: v?.originalPrice,
-        available: v?.available ?? v?.availability ?? false,
-        // Images are now URL strings directly in vehicle.images array or vehicle.image
-        images: (() => {
-          // First, try images array (new format - array of URL strings)
-          if (v?.images && Array.isArray(v.images) && v.images.length > 0) {
-            return v.images
-              .map(img => getImageUrl(img))
-              .filter(Boolean); // Remove nulls (old Buffer format)
-          }
-          if (v?.imageUrls && Array.isArray(v.imageUrls) && v.imageUrls.length > 0) {
-            return v.imageUrls
-              .map(img => getImageUrl(img))
-              .filter(Boolean);
-          }
-          // Second, try single image field (new format - single URL string)
-          if (primaryImage) {
-            return [primaryImage];
-          }
-          // No images available
-          return [];
-        })(),
-        transmission: v?.specifications?.transmission || v?.transmission,
-        passengers: v?.specifications?.seats ?? v?.passengers,
-        fuelType: v?.specifications?.fuelType || v?.fuelType,
-        fuelEfficiency: v?.fuelEfficiency,
-        rating: v?.rating,
-        pricing: v?.pricing,
-        specialFeatures: v?.features || v?.specialFeatures,
-        location: v?.location,
-        createdAt: v?.createdAt,
-        isPopular: v?.isPopular,
-        isNew: v?.createdAt ? (new Date(v.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) : false
+        ...mapped,
+        pricePerDay: mapped.price,
+        available: mapped.available ?? false
       };
     });
   }, [vehicles]);

@@ -77,7 +77,7 @@ const notifyNewAdventureBooking = async (booking) => {
 
 ✨ *Adventure:* ${booking.adventureTitle || 'Not specified'}
 👥 *Participants:* ${booking.numberOfParticipants || 1}
-💰 *Total Price:* KES ${Number(booking.adventurePrice || 0).toLocaleString()}
+💰 *Amount:* KES ${Number(booking.adventurePrice || 0).toLocaleString()}
 
 📅 *Status:* ${booking.status.toUpperCase()}
 🕒 *Time:* ${new Date().toLocaleString('en-KE')}
