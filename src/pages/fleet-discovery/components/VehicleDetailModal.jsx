@@ -43,10 +43,20 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface-premium rounded-xl deep-shadow max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-y-contain bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div className="flex min-h-full items-end sm:items-center justify-center sm:p-4">
+        <div
+          className="bg-surface-premium w-full sm:rounded-xl deep-shadow sm:max-w-4xl flex flex-col max-h-[100dvh] sm:max-h-[90vh]"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border shrink-0 sticky top-0 bg-surface-premium z-10">
           <div>
             <h2 className="text-2xl font-bold text-text-charcoal">
               {vehicle?.make} {vehicle?.model}
@@ -62,10 +72,11 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row max-h-[calc(90vh-80px)]">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
+        <div className="flex flex-col lg:flex-row lg:min-h-0">
           {/* Image Gallery */}
-          <div className="lg:w-1/2 relative">
-            <div className="relative h-64 lg:h-full">
+          <div className="lg:w-1/2 relative shrink-0">
+            <div className="relative h-44 sm:h-56 lg:h-72">
               <Image
                 src={vehicleImages[currentImageIndex]}
                 alt={`${vehicle?.make} ${vehicle?.model}`}
@@ -132,9 +143,9 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
           </div>
 
           {/* Content */}
-          <div className="lg:w-1/2 flex flex-col">
+          <div className="lg:w-1/2 flex flex-col lg:min-h-0">
             {/* Tabs */}
-            <div className="flex border-b border-border overflow-x-auto">
+            <div className="flex border-b border-border overflow-x-auto shrink-0 sticky top-0 lg:static bg-surface-premium z-[1]">
               {tabs?.map((tab) => (
                 <button
                   key={tab?.id}
@@ -151,7 +162,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
             </div>
 
             {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="p-4 sm:p-6 lg:flex-1 lg:overflow-y-auto lg:min-h-0">
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Key Stats */}
@@ -300,20 +311,21 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
             </div>
 
             {/* Footer Actions */}
-            <div className="border-t border-border p-6">
-              <div className="flex items-center justify-between">
+            <div className="border-t border-border p-4 sm:p-6 shrink-0 bg-surface-premium">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-cosmic-depth">
+                  <p className="text-xl sm:text-2xl font-bold text-cosmic-depth">
                     {vehicle?.price?.toLocaleString()} KES/day
                   </p>
                   <p className="text-sm text-text-refined">
                     {vehicle?.available ? 'Available now' : 'Currently unavailable'}
                   </p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex gap-3">
                   <Button
                     variant="outline"
                     onClick={onClose}
+                    className="flex-1 sm:flex-none"
                   >
                     Close
                   </Button>
@@ -321,7 +333,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                     variant="default"
                     onClick={() => onBookNow(vehicle, selectedTier)}
                     disabled={!vehicle?.available}
-                    className="bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
+                    className="flex-1 sm:flex-none bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
                   >
                     {vehicle?.available ? 'Book Now' : 'Unavailable'}
                   </Button>
@@ -329,6 +341,8 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>
