@@ -175,31 +175,26 @@ const AdventureCard = ({ adventure, onViewDetails, onBookNow }) => {
             </p>
             <p className="text-[9px] sm:text-[11px] text-gray-400 leading-none mt-1">Negotiable</p>
           </div>
-          <div className="flex items-center gap-1.5 pointer-events-auto">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onBookNow) onBookNow(adventure);
-              }}
-              className="sm:hidden flex items-center gap-1 bg-adventure-orange hover:bg-adventure-orange/90 text-white text-[10px] font-bold px-2 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all flex-shrink-0"
-              aria-label="Book Now"
-            >
-              <Icon name="Calendar" size={11} />
-              Book
-            </button>
-            <span className="bg-cyan-500 text-white text-[11px] sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl whitespace-nowrap shadow-sm flex-shrink-0">
-              Details
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onViewDetails) onViewDetails(adventure);
+            }}
+            className="sm:hidden flex items-center gap-1 bg-adventure-orange hover:bg-adventure-orange/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-all flex-shrink-0 pointer-events-auto"
+            aria-label="Book Now — view trip details"
+          >
+            <Icon name="Calendar" size={11} />
+            Book Now
+          </button>
         </div>
 
         <button
           type="button"
-          className="hidden sm:flex w-full bg-adventure-orange hover:bg-adventure-orange/90 text-white text-sm font-semibold py-2.5 rounded-xl items-center justify-center gap-2 pointer-events-auto transition-all active:scale-[0.98]"
+          className="w-full bg-adventure-orange hover:bg-adventure-orange/90 text-white text-sm font-semibold py-2.5 rounded-full items-center justify-center gap-2 pointer-events-auto transition-all active:scale-[0.98] hidden sm:flex"
           onClick={(e) => {
             e.stopPropagation();
-            if (onBookNow) onBookNow(adventure);
+            if (onViewDetails) onViewDetails(adventure);
           }}
         >
           <Icon name="Calendar" size={15} className="text-white" />

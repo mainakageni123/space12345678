@@ -361,7 +361,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                     variant="default"
                     onClick={() => onBookNow(vehicle, selectedTier)}
                     disabled={!vehicle?.available}
-                    className="flex-1 sm:flex-none bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
+                    className="flex-1 sm:flex-none rounded-full bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
                   >
                     {vehicle?.available ? 'Book Now' : 'Unavailable'}
                   </Button>

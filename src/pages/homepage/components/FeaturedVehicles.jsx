@@ -202,9 +202,7 @@ const FeaturedVehicles = () => {
                         iconPosition="left"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/instant-booking-flow', { 
-                            state: { selectedVehicle: vehicle }
-                          });
+                          handleViewDetails(vehicle);
                         }}
                         className="bg-cosmic-depth hover:bg-cosmic-depth/90 text-white py-2 lg:py-3 text-sm lg:text-base"
                       >

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
@@ -7,6 +7,11 @@ import { getTripType } from '../../../utils/adventureTripType';
 const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    setActiveTab('overview');
+  }, [adventure?._id, adventure?.id, isOpen]);
 
   if (!isOpen || !adventure) return null;
 
@@ -41,9 +46,19 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface-premium rounded-xl deep-shadow max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-y-contain bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div className="flex min-h-full items-end sm:items-center justify-center sm:p-4">
+        <div
+          className="bg-surface-premium w-full sm:rounded-xl deep-shadow sm:max-w-4xl flex flex-col max-h-[100dvh] sm:max-h-[90vh]"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border shrink-0 sticky top-0 bg-surface-premium z-10">
           <div>
             <h2 className="text-2xl font-bold text-text-charcoal">
               {adventure?.title}
@@ -61,9 +76,10 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row max-h-[calc(90vh-80px)]">
-          <div className="lg:w-1/2 relative">
-            <div className="relative h-64 lg:h-full">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
+        <div className="flex flex-col lg:flex-row lg:min-h-0">
+          <div className="lg:w-1/2 relative shrink-0">
+            <div className="relative h-44 sm:h-56 lg:h-72">
               <Image
                 src={adventureImages[currentImageIndex]}
                 alt={adventure?.title}
@@ -113,8 +129,8 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
             )}
           </div>
 
-          <div className="lg:w-1/2 flex flex-col">
-            <div className="flex border-b border-border overflow-x-auto">
+          <div className="lg:w-1/2 flex flex-col lg:min-h-0">
+            <div className="flex border-b border-border overflow-x-auto shrink-0 sticky top-0 lg:static bg-surface-premium z-[1]">
               {tabs?.map((tab) => (
                 <button
                   key={tab?.id}
@@ -131,7 +147,7 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
               ))}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="p-4 sm:p-6 lg:flex-1 lg:overflow-y-auto lg:min-h-0">
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
@@ -250,25 +266,25 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
               )}
             </div>
 
-            <div className="border-t border-border p-6">
-              <div className="flex items-center justify-between">
+            <div className="border-t border-border p-4 sm:p-6 shrink-0 bg-surface-premium">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-cosmic-depth">
-                    {adventure?.price ? `${Number(adventure.price).toLocaleString()} KES` : 'Contact us'}
+                  <p className="text-xl sm:text-2xl font-bold text-cosmic-depth">
+                    {adventure?.price ? `KES ${Number(adventure.price).toLocaleString()}` : 'Contact us'}
                   </p>
                   <p className="text-sm text-text-refined">
                     {available ? `${adventure.availableSeats} seats available` : 'Currently fully booked'}
                   </p>
                 </div>
-                <div className="flex space-x-3">
-                  <Button variant="outline" onClick={onClose}>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={onClose} className="flex-1 sm:flex-none">
                     Close
                   </Button>
                   <Button
                     variant="default"
                     onClick={() => onBookNow(adventure)}
                     disabled={!available}
-                    className="bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
+                    className="flex-1 sm:flex-none rounded-full bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
                   >
                     {available ? 'Book Now' : 'Unavailable'}
                   </Button>
@@ -276,6 +292,8 @@ const AdventureDetailModal = ({ adventure, isOpen, onClose, onBookNow }) => {
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>
