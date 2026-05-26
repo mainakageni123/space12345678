@@ -280,7 +280,7 @@ const AdminCommandCenter = () => {
               size="sm"
               iconName="AlertTriangle"
               className="shadow-lg w-full sm:w-auto"
-              onClick={() => window.location.href = 'tel:+2547244440293'}
+              onClick={() => window.location.href = 'tel:+254724440293'}
             >
               <span className="sm:inline">Emergency Support</span>
               <span className="sm:hidden">SOS</span>
@@ -290,9 +290,9 @@ const AdminCommandCenter = () => {
               size="sm"
               iconName="PhoneCall"
               className="bg-green-600 hover:bg-green-700 shadow-lg w-full sm:w-auto"
-              onClick={() => window.location.href = 'tel:+2547244440293'}
+              onClick={() => window.location.href = 'tel:+254724440293'}
             >
-              <span className="sm:inline">Call Support: +2547244440293</span>
+              <span className="sm:inline">Call Support: +254724440293</span>
               <span className="sm:hidden">Call</span>
             </Button>
           </div>

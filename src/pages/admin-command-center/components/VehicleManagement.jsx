@@ -39,23 +39,25 @@ const VehicleManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {vehicles.map((vehicle) => (
-          <div key={vehicle.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 premium-shadow">
+        {vehicles.map((vehicle) => {
+          const vid = vehicle.id || vehicle._id;
+          return (
+          <div key={vid} className="bg-white rounded-xl overflow-hidden border border-gray-100 premium-shadow">
             <div className="relative h-48">
               <Image
-                src={vehicle.image || '/images/no_image.png'}
+                src={vehicle.images?.[0] || vehicle.image || vehicle.imageUrl || '/assets/images/no_image.png'}
                 alt={vehicle.name}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-4 right-4 flex space-x-2">
                 <button
-                  onClick={() => handleEditVehicle(vehicle.id)}
+                  onClick={() => handleEditVehicle(vid)}
                   className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white text-cosmic-depth"
                 >
                   <Icon name="Edit" size={16} />
                 </button>
                 <button
-                  onClick={() => setShowDeleteConfirm(vehicle.id)}
+                  onClick={() => setShowDeleteConfirm(vid)}
                   className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white text-error"
                 >
                   <Icon name="Trash" size={16} />
@@ -96,7 +98,8 @@ const VehicleManagement = () => {
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* Delete Confirmation Modal */}

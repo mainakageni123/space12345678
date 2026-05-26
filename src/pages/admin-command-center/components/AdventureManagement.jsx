@@ -33,6 +33,7 @@ const AdventureManagement = () => {
 
   const [imageInputType, setImageInputType] = useState('url'); // 'url' or 'upload'
   const [selectedFile, setSelectedFile] = useState(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState('');
 
   const durationOptions = [
     { value: '1 Day', label: '1 Day' },
@@ -115,11 +116,21 @@ const AdventureManagement = () => {
     });
     setImageInputType('url');
     setSelectedFile(null);
+    setOriginalImageUrl('');
+  };
+
+  const resolveImageForSave = () => {
+    if (selectedFile) return null; // file upload handled separately
+    const candidate = formData.image?.trim() || '';
+    if (candidate.startsWith('blob:')) {
+      return originalImageUrl || editingAdventure?.image || '';
+    }
+    return candidate;
   };
 
   const buildAdventurePayload = () => {
     const tripType = normalizeTripTypeForSave(formData.tripType);
-    return {
+    const payload = {
       title: formData.title.trim(),
       description: formData.description.trim(),
       location: formData.location.trim(),
@@ -127,11 +138,26 @@ const AdventureManagement = () => {
       tripType,
       price: parseFloat(formData.price) || 0,
       maxParticipants: parseInt(formData.maxParticipants, 10) || 0,
-      image: formData.image,
       highlights: formData.highlights.split(',').map((h) => h.trim()).filter(Boolean),
       bestTime: formData.bestTime.trim(),
       included: formData.included.split(',').map((i) => i.trim()).filter(Boolean),
     };
+    const image = resolveImageForSave();
+    if (image) payload.image = image;
+    return payload;
+  };
+
+  const appendAdventureFormFields = (formDataObj) => {
+    formDataObj.append('title', formData.title);
+    formDataObj.append('description', formData.description);
+    formDataObj.append('location', formData.location);
+    formDataObj.append('duration', formData.duration);
+    formDataObj.append('tripType', normalizeTripTypeForSave(formData.tripType));
+    formDataObj.append('price', formData.price);
+    formDataObj.append('maxParticipants', formData.maxParticipants);
+    formDataObj.append('bestTime', formData.bestTime);
+    formDataObj.append('highlights', JSON.stringify(formData.highlights.split(',').map((h) => h.trim()).filter(Boolean)));
+    formDataObj.append('included', JSON.stringify(formData.included.split(',').map((i) => i.trim()).filter(Boolean)));
   };
 
   const handleSubmit = async (e) => {
@@ -153,24 +179,11 @@ const AdventureManagement = () => {
       let body;
 
       if (imageInputType === 'upload' && selectedFile) {
-        // Use FormData for file upload
         const formDataObj = new FormData();
-        formDataObj.append('title', formData.title);
-        formDataObj.append('description', formData.description);
-        formDataObj.append('location', formData.location);
-        formDataObj.append('duration', formData.duration);
-        formDataObj.append('tripType', normalizeTripTypeForSave(formData.tripType));
-        formDataObj.append('price', formData.price);
-        formDataObj.append('maxParticipants', formData.maxParticipants);
-        formDataObj.append('bestTime', formData.bestTime);
-        formDataObj.append('highlights', JSON.stringify(formData.highlights.split(',').map(h => h.trim()).filter(Boolean)));
-        formDataObj.append('included', JSON.stringify(formData.included.split(',').map(i => i.trim()).filter(Boolean)));
+        appendAdventureFormFields(formDataObj);
         formDataObj.append('image', selectedFile);
-        
         body = formDataObj;
-        // Do NOT set Content-Type for FormData
       } else {
-        // Use JSON for URL-based image or no new image
         body = JSON.stringify(buildAdventurePayload());
         headers['Content-Type'] = 'application/json';
       }
@@ -208,7 +221,9 @@ const AdventureManagement = () => {
   };
 
   const handleEdit = (adventure) => {
+    const imageUrl = adventure.image || adventure.images?.[0] || '';
     setEditingAdventure(adventure);
+    setOriginalImageUrl(imageUrl);
     setFormData({
       title: adventure.title || '',
       description: adventure.description || '',
@@ -217,14 +232,12 @@ const AdventureManagement = () => {
       tripType: getTripType(adventure),
       price: adventure.price?.toString() || '',
       maxParticipants: adventure.maxParticipants?.toString() || '',
-      image: adventure.image || '',
+      image: imageUrl,
       highlights: adventure.highlights?.join(', ') || '',
       bestTime: adventure.bestTime || '',
       included: adventure.included?.join(', ') || ''
     });
-    
-    // Set image input type based on existing image (assume URL if image exists)
-    setImageInputType(adventure.image ? 'url' : 'url');
+    setImageInputType(imageUrl && imageUrl.startsWith('http') ? 'url' : 'upload');
     setSelectedFile(null);
     setShowAddForm(true);
   };
@@ -415,7 +428,7 @@ const AdventureManagement = () => {
                         setImageInputType(e.target.value);
                         setSelectedFile(null);
                         if (e.target.value === 'url') {
-                          setFormData(prev => ({ ...prev, image: '' }));
+                          setFormData((prev) => ({ ...prev, image: originalImageUrl || '' }));
                         }
                       }}
                       className="mr-2"

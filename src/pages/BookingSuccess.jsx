@@ -93,10 +93,10 @@ const BookingSuccess = () => {
           <div className="text-center text-sm text-gray-500 border-t pt-6">
             <p>Need help? Contact us:</p>
             <div className="flex justify-center gap-4 mt-2">
-              <a href="tel:+2547244440293" className="text-blue-600 hover:underline">
+              <a href="tel:+254724440293" className="text-blue-600 hover:underline">
                 📞 Call Us
               </a>
-              <a href="https://wa.me/2547244440293" target="_blank" rel="noreferrer" className="text-green-600 hover:underline">
+              <a href="https://wa.me/254724440293" target="_blank" rel="noreferrer" className="text-green-600 hover:underline">
                 💬 Text us on WhatsApp
               </a>
             </div>

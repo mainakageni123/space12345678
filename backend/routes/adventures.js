@@ -105,6 +105,11 @@ router.put('/:id', authMiddleware, singleImageUpload, async (req, res) => {
         // Handle image from file upload
         if (req.file) {
             adventureData.image = req.file.path;
+        } else if (
+            adventureData.image &&
+            (String(adventureData.image).startsWith('blob:') || !String(adventureData.image).startsWith('http'))
+        ) {
+            delete adventureData.image;
         }
 
         // Parse array fields if they come as strings (from FormData)
@@ -125,7 +130,11 @@ router.put('/:id', authMiddleware, singleImageUpload, async (req, res) => {
         }
 
         const normalized = normalizeAdventureData(adventureData);
-        const adv = await Adventure.findByIdAndUpdate(req.params.id, normalized, { new: true });
+        const adv = await Adventure.findByIdAndUpdate(
+            req.params.id,
+            { $set: normalized },
+            { new: true, runValidators: true }
+        );
         if (!adv) return res.status(404).json({ success: false, message: 'Not found' });
         res.json({ success: true, adventure: adv });
     } catch (e) {

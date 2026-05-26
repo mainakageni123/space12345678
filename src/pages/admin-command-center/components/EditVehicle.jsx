@@ -108,9 +108,17 @@ const EditVehicle = () => {
           }));
         }
 
-        // Store existing images
-        const imagesList = vehicle.images || vehicle.imageUrls || (vehicle.image ? [vehicle.image] : []);
-        if (imagesList && Array.isArray(imagesList)) {
+        // Store existing images (merge all sources, dedupe)
+        const imagesList = [];
+        const addUrl = (url) => {
+          if (url && typeof url === 'string' && url.startsWith('http') && !imagesList.includes(url)) {
+            imagesList.push(url);
+          }
+        };
+        if (Array.isArray(vehicle.images)) vehicle.images.forEach(addUrl);
+        addUrl(vehicle.image);
+        if (Array.isArray(vehicle.imageUrls)) vehicle.imageUrls.forEach(addUrl);
+        if (imagesList.length > 0) {
           setExistingImages(imagesList.map((url, index) => ({ url, index })));
         }
 

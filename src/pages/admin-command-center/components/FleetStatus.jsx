@@ -98,7 +98,7 @@ const FleetStatus = () => {
               {/* Image */}
               <div className="relative h-32 overflow-hidden">
                 <img
-                  src={vehicle.images?.[0] || '/public/assets/images/no_image.png'}
+                  src={vehicle.images?.[0] || vehicle.image || vehicle.imageUrl || '/assets/images/no_image.png'}
                   alt={`${vehicle.make} ${vehicle.model}`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

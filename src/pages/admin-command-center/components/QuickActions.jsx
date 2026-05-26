@@ -26,7 +26,7 @@ const QuickActions = () => {
       icon: 'MessageCircle',
       title: 'Customer Support',
       description: 'WhatsApp support line',
-      link: 'https://wa.me/2547244440293',
+      link: 'https://wa.me/254724440293',
       variant: 'outline',
       external: true
     }
