@@ -1,8 +1,9 @@
 import React from 'react';
 import Button from './ui/Button';
 import formatWhatsAppLink from '../utils/formatWhatsAppLink';
+import { SUPPORT_PHONE_E164 } from '../config/contact';
 
-const WhatsAppButton = ({ phoneNumber = '+254724440293', children, className, type = 'message' }) => {
+const WhatsAppButton = ({ phoneNumber = SUPPORT_PHONE_E164, children = 'Text us on WhatsApp', className, type = 'message' }) => {
   const whatsappUrl = formatWhatsAppLink(phoneNumber, type);
 
   const handleClick = () => {

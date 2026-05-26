@@ -69,15 +69,13 @@ const HeroSection = () => {
           <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
             <div className="max-w-2xl">
               <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
-                Your Trip,
+                Your Next Adventure
                 <span className="block text-stellar-gold font-accent">
-                  Our Expertise
+                  Starts Here
                 </span>
               </h1>
-              <p className="mt-6 text-2xl lg:text-3xl font-medium text-white/90 italic tracking-wide">
-                <span className="inline-block bg-gradient-to-r from-stellar-gold via-yellow-300 to-stellar-gold bg-clip-text text-transparent font-semibold">
-                  "Trips Crafted, Memories Made"
-                </span>
+              <p className="mt-6 text-xl sm:text-2xl lg:text-3xl font-medium text-white/90 tracking-wide max-w-xl">
+                Trips across Kenya, crafted for you.
               </p>
             </div>
           </div>

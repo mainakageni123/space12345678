@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
 import { API_BASE_URL } from '../../config/api';
+import { SUPPORT_TEL_URL, supportWhatsAppUrl } from '../../config/contact';
 
 const Confirmation = () => {
   const { state } = useLocation();
@@ -22,9 +23,8 @@ const Confirmation = () => {
 
 
 
-  const waNumber = '24724440293';
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi, I want to confirm my booking for ${displayName} worth KES ${totalAmount}.`)}`;
-  const telUrl = 'tel:+254724440293';
+  const waUrl = supportWhatsAppUrl(`Hi, I want to confirm my booking for ${displayName} worth KES ${totalAmount}.`);
+  const telUrl = SUPPORT_TEL_URL;
   
   const formatPrice = (price) => {
     return `KES ${Number(price || 0).toLocaleString()}`;
@@ -58,7 +58,7 @@ const Confirmation = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a href={waUrl} target="_blank" rel="noreferrer">
-                <Button variant="outline" fullWidth>💬 WhatsApp Us</Button>
+                <Button variant="outline" fullWidth>💬 Text us on WhatsApp</Button>
               </a>
               <a href={telUrl}>
                 <Button variant="outline" fullWidth>📞 Call Us</Button>

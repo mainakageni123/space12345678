@@ -315,7 +315,7 @@ const QuoteRequest = () => {
                 <Input
                   type="tel"
                   label="Phone Number"
-                  placeholder="+254724440293"
+                  placeholder="+2547244440293"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   required

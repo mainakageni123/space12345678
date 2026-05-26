@@ -688,13 +688,15 @@ const BookingList = () => {
                                 ? (booking.serviceLabel || 'PSV transport')
                                 : (booking.vehicleName || booking.adventureTitle || 'Service');
                               const message = `Hi ${customerName}, your booking for ${serviceName} has been confirmed! Ref: ${booking._id}`;
-                              window.location.href = `sms:${booking.phoneNumber}?body=${encodeURIComponent(message)}`;
+                              const digits = String(booking.phoneNumber || '').replace(/\D/g, '');
+                              const waPhone = digits.startsWith('254') ? digits : digits.startsWith('0') ? `254${digits.slice(1)}` : `254${digits}`;
+                              window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
                             }}
                             disabled={!booking.phoneNumber}
-                            className="justify-center border-blue-600 text-blue-600 hover:bg-blue-50"
+                            className="justify-center border-green-600 text-green-600 hover:bg-green-50"
                           >
                             <Icon name="MessageSquare" className="w-4 h-4 mr-2" />
-                            Text
+                            Text us on WhatsApp
                           </Button>
                         </div>
                         <Button

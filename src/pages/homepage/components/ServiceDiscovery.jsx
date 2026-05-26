@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import WhatsAppButton from '../../../components/WhatsAppButton';
+import { SUPPORT_PHONE_DISPLAY_SPACED, SUPPORT_TEL_URL } from '../../../config/contact';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
 
@@ -163,7 +164,7 @@ const ServiceDiscovery = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <a
-                href="tel:+254724440293"
+                href={SUPPORT_TEL_URL}
                 className="w-full sm:w-auto"
               >
                 <Button
@@ -174,16 +175,16 @@ const ServiceDiscovery = () => {
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Icon name="PhoneCall" size={20} />
-                    <span>Call +254 724 440293</span>
+                    <span>Call {SUPPORT_PHONE_DISPLAY_SPACED}</span>
                   </span>
                 </Button>
               </a>
               <div className="w-full sm:w-auto">
-                <WhatsAppButton 
-                  phoneNumber="+254724440293"
-                  message="Hi, I'm interested in your custom mobility solutions."
+                <WhatsAppButton
                   className="w-full py-3 px-6"
-                />
+                >
+                  Text us on WhatsApp
+                </WhatsAppButton>
               </div>
             </div>
           </div>
