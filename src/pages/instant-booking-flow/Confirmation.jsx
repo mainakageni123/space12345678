@@ -101,14 +101,6 @@ const Confirmation = () => {
             />
           )}
 
-          {bookingId && !isPaid && (
-            <Link to={`/mpesa-pay?bookingId=${bookingId}`}>
-              <Button variant="default" fullWidth className="bg-[#00A859] hover:bg-[#008F4D] text-white">
-                Pay Now
-              </Button>
-            </Link>
-          )}
-
           <div className="border-t pt-6 space-y-4">
             <h2 className="text-lg font-semibold">Need help?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

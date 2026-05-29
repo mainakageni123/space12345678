@@ -198,7 +198,7 @@ const BookingMpesaPay = ({
         iconName="Smartphone"
         iconPosition="left"
       >
-        {loading ? 'Sending M-Pesa request…' : 'Pay with M-Pesa'}
+        {loading ? 'Sending M-Pesa request…' : 'Pay Now'}
       </Button>
 
       <p className={`text-[11px] text-center leading-relaxed ${mutedClass}`}>

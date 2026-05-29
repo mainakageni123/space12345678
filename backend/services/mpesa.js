@@ -8,14 +8,17 @@ const KCB_PASSKEY = process.env.KCB_BUNI_ORG_PASSKEY || process.env.MPESA_PASSKE
 const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback';
 const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || 'sandbox';
 
+// Use live KCB endpoints when env value starts with "prod" (e.g. production in Netlify dashboard)
+const useKcbLive = () => String(KCB_ENV || '').toLowerCase().startsWith('prod');
+
 // Endpoints (configurable via environment variables)
 const SANDBOX_TOKEN_URL = process.env.KCB_BUNI_SANDBOX_TOKEN_URL || 'https://uat.buni.kcbgroup.com/token';
-const PRODUCTION_TOKEN_URL = process.env.KCB_BUNI_TOKEN_URL || 'https://accounts.buni.kcbgroup.com/oauth2/token';
+const LIVE_TOKEN_URL = process.env.KCB_BUNI_TOKEN_URL || 'https://accounts.buni.kcbgroup.com/oauth2/token';
 const SANDBOX_REQUEST_URL = process.env.KCB_BUNI_SANDBOX_STK_PUSH_URL || 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0';
-const PRODUCTION_REQUEST_URL = process.env.KCB_BUNI_STK_PUSH_URL || 'https://api.kcbgroup.com/mm/api/request/1.0.0';
+const LIVE_REQUEST_URL = process.env.KCB_BUNI_STK_PUSH_URL || 'https://api.kcbgroup.com/mm/api/request/1.0.0';
 
-const TOKEN_URL = KCB_ENV === process.env.KCB_BUNI_ENV ? PRODUCTION_TOKEN_URL : SANDBOX_TOKEN_URL;
-const REQUEST_URL = KCB_ENV === process.env.KCB_BUNI_ENV ? PRODUCTION_REQUEST_URL : SANDBOX_REQUEST_URL;
+const getTokenUrl = () => (useKcbLive() ? LIVE_TOKEN_URL : SANDBOX_TOKEN_URL);
+const getRequestUrl = () => (useKcbLive() ? LIVE_REQUEST_URL : SANDBOX_REQUEST_URL);
 
 const formatPhoneNumber = (phoneNumber) => {
   let formatted = phoneNumber.toString().trim();
@@ -39,7 +42,7 @@ const getAccessToken = async () => {
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
   
   const response = await axios.post(
-    TOKEN_URL,
+    getTokenUrl(),
     'grant_type=client_credentials',
     {
       headers: {
@@ -79,7 +82,7 @@ const initiateStkPush = async ({
   };
 
   const response = await axios.post(
-    REQUEST_URL,
+    getRequestUrl(),
     payload,
     {
       headers: {
@@ -111,7 +114,7 @@ const queryStkStatus = async (checkoutRequestId) => {
 };
 
 const isMpesaConfigured = () =>
-  Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_PASSKEY);
+  Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_SHORTCODE);
 
 module.exports = {
   formatPhoneNumber,

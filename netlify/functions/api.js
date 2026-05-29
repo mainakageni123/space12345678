@@ -321,13 +321,16 @@ app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
+const hideServerErrorDetails = () =>
+    String(process.env.NODE_ENV || '').toLowerCase().startsWith('prod');
+
 // Error handler
 app.use((err, req, res, next) => {
     console.error('Error:', err.stack);
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'Something went wrong!',
-        error: process.env.NODE_ENV === process.env.KCB_BUNI_ENV ? undefined : err.stack
+        error: hideServerErrorDetails() ? undefined : err.stack
     });
 });
 
@@ -372,7 +375,7 @@ module.exports.handler = async (event, context) => {
             body: JSON.stringify({
                 success: false,
                 message: 'Internal server error',
-                error: process.env.NODE_ENV === process.env.KCB_BUNI_ENV ? undefined : error.message
+                error: hideServerErrorDetails() ? undefined : error.message
             })
         };
     }

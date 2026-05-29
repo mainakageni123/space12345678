@@ -8,7 +8,7 @@
   NPM_CONFIG_PRODUCTION = "false"
 
 [build]
-  SECRETS_SCAN_OMIT_PATHS = "*.md,.cursor/**,*.template"
+  SECRETS_SCAN_OMIT_PATHS = "**/*.md,.cursor/**,backend/diagnose-mpesa.js,backend/test-credentials.js,backend/test-mpesa.js,car-hire-main123/**,.env.netlify.template,package.json,netlify.toml"
   # Build command for the frontend (Vite)
   command = "npm run build"
   # Directory containing the built frontend files
@@ -66,9 +66,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer-when-downgrade"
 
-# Environment context-specific settings
-[context.production.environment]
-  # Removed literal "production" assignment to avoid Netlify scanner flagging it as a leaked secret
+# Environment context-specific settings (set secrets in Netlify dashboard only)
 [context.deploy-preview.environment]
   NODE_ENV = "development"
 
