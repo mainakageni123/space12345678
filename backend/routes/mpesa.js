@@ -6,9 +6,24 @@ const {
   initiateStkPush,
   queryStkStatus,
   isMpesaConfigured,
-  formatPhoneNumber
+  formatPhoneNumber,
+  logKcbConfig,
+  formatKcbError
 } = require('../services/mpesa');
 const { startBookingPayment, handleMpesaCallback } = require('../services/bookingWorkflow');
+
+router.get('/status', (req, res) => {
+  logKcbConfig();
+  res.json({
+    success: true,
+    configured: isMpesaConfigured(),
+    env: process.env.KCB_BUNI_ENV ? 'SET' : 'MISSING',
+    consumerKey: process.env.KCB_BUNI_CONSUMER_KEY ? 'SET' : 'MISSING',
+    consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
+    shortcode: process.env.KCB_BUNI_ORG_SHORTCODE ? 'SET' : 'MISSING',
+    callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING'
+  });
+});
 
 router.post('/stkpush', async (req, res) => {
   try {
@@ -66,11 +81,11 @@ router.post('/stkpush', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('STK Push Error:', error.response?.data || error.message);
+    console.error('STK Push Error:', error.message);
     res.status(500).json({
       success: false,
       error: 'Failed to initiate payment',
-      message: error.response?.data?.errorMessage || error.message
+      message: formatKcbError(error)
     });
   }
 });

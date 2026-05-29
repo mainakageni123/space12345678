@@ -81,5 +81,5 @@
   external_node_modules = ["mongoose"]
 
 [functions."api"]
-  # Free tier max is 10s; Pro plans can use up to 26
-  timeout = 10
+  # STK push + token calls can be slow; Netlify max is 26s
+  timeout = 26
