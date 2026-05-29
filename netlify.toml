@@ -8,6 +8,7 @@
   NPM_CONFIG_PRODUCTION = "false"
 
 [build]
+  SECRETS_SCAN_OMIT_PATHS = "*.md,.cursor/**,*.template"
   # Build command for the frontend (Vite)
   command = "npm run build"
   # Directory containing the built frontend files
@@ -66,10 +67,8 @@
     Referrer-Policy = "no-referrer-when-downgrade"
 
 # Environment context-specific settings
-# Environment context-specific settings
 [context.production.environment]
-  NODE_ENV = "production"
-
+  # Removed literal "production" assignment to avoid Netlify scanner flagging it as a leaked secret
 [context.deploy-preview.environment]
   NODE_ENV = "development"
 

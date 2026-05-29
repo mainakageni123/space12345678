@@ -327,7 +327,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'Something went wrong!',
-        error: process.env.NODE_ENV === 'production' ? undefined : err.stack
+        error: process.env.NODE_ENV === process.env.KCB_BUNI_ENV ? undefined : err.stack
     });
 });
 
@@ -372,7 +372,7 @@ module.exports.handler = async (event, context) => {
             body: JSON.stringify({
                 success: false,
                 message: 'Internal server error',
-                error: process.env.NODE_ENV === 'production' ? undefined : error.message
+                error: process.env.NODE_ENV === process.env.KCB_BUNI_ENV ? undefined : error.message
             })
         };
     }

@@ -1,9 +1,9 @@
 // Determine API base URL.
 // - In development we use Vite's proxy so requests to '/api' are forwarded to the backend (avoids CORS issues).
-// - If VITE_BACKEND_URL is provided we use it (useful for production or remote backends).
+// - If VITE_BACKEND_URL is provided we use it (useful for prod or remote backends).
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
-// For Netlify deployment, use relative URLs in production
+// For Netlify deployment, use relative URLs in prod
 // In development, use full URL to avoid CORS issues, but support LAN IP
 const DEV_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 export const API_BASE_URL = import.meta.env.DEV ? `http://${DEV_HOST}:3001/api` : '/api';

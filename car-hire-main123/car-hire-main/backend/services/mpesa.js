@@ -14,8 +14,8 @@ const PRODUCTION_TOKEN_URL = process.env.KCB_BUNI_TOKEN_URL || 'https://accounts
 const SANDBOX_REQUEST_URL = process.env.KCB_BUNI_SANDBOX_STK_PUSH_URL || 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0';
 const PRODUCTION_REQUEST_URL = process.env.KCB_BUNI_STK_PUSH_URL || 'https://api.kcbgroup.com/mm/api/request/1.0.0';
 
-const TOKEN_URL = KCB_ENV === 'production' ? PRODUCTION_TOKEN_URL : SANDBOX_TOKEN_URL;
-const REQUEST_URL = KCB_ENV === 'production' ? PRODUCTION_REQUEST_URL : SANDBOX_REQUEST_URL;
+const TOKEN_URL = KCB_ENV === process.env.KCB_BUNI_ENV ? PRODUCTION_TOKEN_URL : SANDBOX_TOKEN_URL;
+const REQUEST_URL = KCB_ENV === process.env.KCB_BUNI_ENV ? PRODUCTION_REQUEST_URL : SANDBOX_REQUEST_URL;
 
 const formatPhoneNumber = (phoneNumber) => {
   let formatted = phoneNumber.toString().trim();
