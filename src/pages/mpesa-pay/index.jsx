@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
+import MpesaPayment from '../../components/MpesaPayment';
+import { API_BASE_URL } from '../../config/api';
 
 function useQuery() {
   const { search } = useLocation();
@@ -10,30 +12,43 @@ function useQuery() {
 
 const MpesaPay = () => {
   const query = useQuery();
+  const bookingId = query.get('bookingId') || '';
+  const [booking, setBooking] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [paid, setPaid] = useState(false);
+
   const pickupDate = query.get('pickupDate') || '';
   const returnDate = query.get('returnDate') || '';
   const vehicle = query.get('vehicle') || '';
   const phone = query.get('phone') || '';
 
-  const simulatePayment = () => {
-    try {
-      const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-      const tx = {
-        id: `TX-${Date.now()}`,
-        pickupDate,
-        returnDate,
-        vehicle,
-        phone,
-        status: 'success',
-        timestamp: new Date().toISOString(),
-      };
-      localStorage.setItem('payments', JSON.stringify([...payments, tx]));
-      alert('M-Pesa payment simulated as SUCCESS. We will contact you shortly.');
-    } catch (e) {
-      console.error('Payment storage failed', e);
-      alert('Could not record payment.');
-    }
-  };
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/bookings/${bookingId}`);
+        const data = await res.json();
+        if (!data.success) {
+          setLoadError(data.error || 'Booking not found');
+          return;
+        }
+        setBooking(data.booking);
+        if (data.booking.paymentStatus === 'paid') setPaid(true);
+      } catch (e) {
+        setLoadError('Could not load booking');
+      }
+    };
+
+    load();
+  }, [bookingId]);
+
+  const amount = booking?.vehiclePrice || Number(query.get('amount')) || 0;
+  const displayVehicle = booking?.vehicleName || vehicle || 'Your booking';
+  const displayPhone = booking?.phoneNumber || phone;
+  const accountRef = bookingId ? `BK_${bookingId.slice(-8)}` : 'SpaceBorne';
+
+  const needsApproval = false; // Direct payments do not need to wait for admin approval
 
   return (
     <div className="min-h-screen bg-surface-premium">
@@ -41,52 +56,58 @@ const MpesaPay = () => {
       <main className="max-w-3xl mx-auto px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl premium-shadow p-8 space-y-6">
           <h1 className="text-3xl font-bold text-cosmic-depth">M-Pesa Payment</h1>
-          <p className="text-text-refined">Confirm your booking details and proceed to pay.</p>
 
-          <div className="rounded-xl border border-border p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div>
-                <div className="text-text-refined">Pickup Date</div>
-                <div className="text-cosmic-depth font-medium">{pickupDate || '—'}</div>
-              </div>
-              <div>
-                <div className="text-text-refined">Return Date</div>
-                <div className="text-cosmic-depth font-medium">{returnDate || '—'}</div>
-              </div>
-              <div>
-                <div className="text-text-refined">Vehicle</div>
-                <div className="text-cosmic-depth font-medium">{vehicle || '—'}</div>
-              </div>
-              <div>
-                <div className="text-text-refined">Phone</div>
-                <div className="text-cosmic-depth font-medium">{phone || '—'}</div>
-              </div>
+          {loadError && (
+            <p className="text-red-600 text-sm">{loadError}</p>
+          )}
+
+          {paid ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-green-800">
+              <p className="font-semibold">Payment already received for this booking.</p>
+              {booking?.mpesaReceiptNumber && (
+                <p className="text-sm mt-2">Receipt: {booking.mpesaReceiptNumber}</p>
+              )}
+              <Link to="/booking-success" state={{ bookingId, amount }} className="inline-block mt-4">
+                <Button variant="default">View confirmation</Button>
+              </Link>
             </div>
-          </div>
+          ) : needsApproval ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-amber-900">
+              <p className="font-semibold">Waiting for admin approval</p>
+              <p className="text-sm mt-2">
+                You will get a WhatsApp message when your booking is approved. Then return here to pay
+                via M-Pesa, or use the STK push sent to your phone.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-text-refined">
+                Pay for <strong>{displayVehicle}</strong> — KES {Number(amount).toLocaleString()}
+              </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Button
-              variant="default"
-              iconName="Smartphone"
-              className="bg-[#00A859] hover:bg-[#008F4D] text-white"
-              onClick={simulatePayment}
-            >
-              Pay Now
-            </Button>
-            <a href={`tel:${phone || '+254724440293'}`}>
-              <Button variant="outline" iconName="Phone" className="border-cosmic-depth text-cosmic-depth hover:bg-cosmic-depth hover:text-white" asChild>
-                <span>Call Us</span>
-              </Button>
-            </a>
-            <Link to="/instant-booking-flow">
-              <Button variant="outline" iconName="ArrowLeft" className="border-border text-text-refined hover:bg-cosmic-silver/50" asChild>
-                <span>Back</span>
+              <div className="rounded-xl border border-border p-4 text-sm space-y-2">
+                {pickupDate && <p>Pickup: {pickupDate}</p>}
+                {returnDate && <p>Return: {returnDate}</p>}
+                {displayPhone && <p>Phone: {displayPhone}</p>}
+                {bookingId && <p className="font-mono text-xs">Booking: {bookingId}</p>}
+              </div>
+
+              <MpesaPayment
+                amount={amount}
+                accountReference={accountRef}
+                bookingId={bookingId || undefined}
+                onSuccess={() => setPaid(true)}
+                onCancel={() => {}}
+              />
+            </>
+          )}
+
+          <div className="flex gap-3">
+            <Link to="/fleet-discovery">
+              <Button variant="outline" iconName="ArrowLeft">
+                Back to fleet
               </Button>
             </Link>
-          </div>
-
-          <div className="text-xs text-text-refined">
-            Note: This is a demo payment screen. For live M‑Pesa STK push integration, we will connect to your backend API.
           </div>
         </div>
       </main>

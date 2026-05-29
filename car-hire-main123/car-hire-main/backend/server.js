@@ -130,7 +130,9 @@ const routes = {
     messages: require('./routes/messages'),
     adminUsers: require('./routes/admin-users'),
     adventures: require('./routes/adventures'),
-    psvBookings: require('./routes/psv-bookings')
+    psvBookings: require('./routes/psv-bookings'),
+    mpesa: require('./routes/mpesa'),
+    whatsapp: require('./routes/whatsapp-webhook')
 };
 
 // Register vehicle image route separately for direct access
@@ -158,6 +160,8 @@ app.use('/api/messages', routes.messages);
 app.use('/api/admin/users', routes.adminUsers);
 app.use('/api/adventures', routes.adventures);
 app.use('/api/psv-bookings', routes.psvBookings);
+app.use('/api/mpesa', routes.mpesa);
+app.use('/api/whatsapp', routes.whatsapp);
 
 // Log registered routes
 console.log('Available API routes:', [
@@ -165,6 +169,8 @@ console.log('Available API routes:', [
     '/api/bookings',
     '/api/adventure-bookings',
     '/api/psv-bookings',
+    '/api/mpesa',
+    '/api/whatsapp',
     '/api/system',
     '/api/messages',
     '/api/admin/users',

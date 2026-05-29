@@ -161,7 +161,8 @@ const routes = {
     messages: require('../../backend/routes/messages'),
     adminUsers: require('../../backend/routes/admin-users'),
     adventures: require('../../backend/routes/adventures'),
-    psvBookings: require('../../backend/routes/psv-bookings')
+    psvBookings: require('../../backend/routes/psv-bookings'),
+    whatsapp: require('../../backend/routes/whatsapp-webhook')
 };
 
 // Register vehicle image route - handles both /images/vehicles/:id and /api/images/vehicles/:id
@@ -243,6 +244,7 @@ app.use(['/api/messages', '/messages'], routes.messages);
 app.use(['/api/admin/users', '/admin/users'], routes.adminUsers);
 app.use(['/api/adventures', '/adventures'], routes.adventures);
 app.use(['/api/psv-bookings', '/psv-bookings'], routes.psvBookings);
+app.use(['/api/whatsapp', '/whatsapp'], routes.whatsapp);
 
 // API request logging
 let lastVerifyLogAt = 0;

@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config/api';
 import Icon from './AppIcon';
 import Button from './ui/Button';
 
-const MpesaPayment = ({ amount, accountReference, onSuccess, onCancel }) => {
+const MpesaPayment = ({ amount, accountReference, bookingId, onSuccess, onCancel }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -76,17 +76,24 @@ const MpesaPayment = ({ amount, accountReference, onSuccess, onCancel }) => {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/mpesa/stkpush`, {
+      const endpoint = bookingId
+        ? `${API_BASE_URL}/mpesa/pay-booking/${bookingId}`
+        : `${API_BASE_URL}/mpesa/stkpush`;
+
+      const payload = bookingId
+        ? { phoneNumber: phoneNumber.replace(/\s/g, '') }
+        : {
+            phoneNumber: phoneNumber.replace(/\s/g, ''),
+            amount,
+            accountReference: accountReference || 'SpaceBorne',
+            transactionDesc: `Payment for ${accountReference || 'booking'}`,
+            bookingId
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber.replace(/\s/g, ''),
-          amount: amount,
-          accountReference: accountReference || 'SpaceBorne',
-          transactionDesc: `Payment for ${accountReference || 'booking'}`
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();

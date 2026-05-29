@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Message = require('../models/Message');
 const authMiddleware = require('../middleware/auth');
 const { notifyNewCarBooking } = require('../services/whatsapp');
+const { approveBooking, rejectBooking } = require('../services/bookingWorkflow');
 
 router.use((req, res, next) => {
     console.log(`Bookings Route: ${req.method} ${req.originalUrl}`);
@@ -311,6 +312,22 @@ router.get('/analytics', async (req, res) => {
     }
 });
 
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ success: false, error: 'Invalid booking ID format' });
+        }
+        const booking = await Booking.findById(id).select('-__v');
+        if (!booking) {
+            return res.status(404).json({ success: false, error: 'Booking not found' });
+        }
+        res.json({ success: true, booking });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to fetch booking' });
+    }
+});
+
 // Update booking (for payment status, etc.)
 router.patch('/:id', async (req, res) => {
     try {
@@ -356,80 +373,34 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// Approve a booking
+// Approve a booking (triggers customer WhatsApp + M-Pesa STK push)
 router.patch('/:id/approve', async (req, res) => {
     try {
-        console.log('Approve booking request received:', req.params.id);
-        console.log('Request body:', req.body);
-        
         const { id } = req.params;
-        const { approvedBy } = req.body; // Admin email or name
-        
+        const { approvedBy } = req.body;
+
         if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
-            console.log('Invalid booking ID format:', id);
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid booking ID format',
-                receivedId: id
-            });
+            return res.status(400).json({ success: false, error: 'Invalid booking ID format' });
         }
 
-        const booking = await Booking.findById(id);
-        
-        if (!booking) {
-            console.log('Booking not found:', id);
-            return res.status(404).json({
-                success: false,
-                error: 'Booking not found',
-                bookingId: id
-            });
+        const result = await approveBooking(id, approvedBy || 'Admin');
+        if (!result.ok) {
+            const status = result.error === 'Booking not found' ? 404 : 400;
+            return res.status(status).json({ success: false, error: result.error });
         }
 
-        console.log('Current booking status:', booking.status);
-        
-        booking.status = 'approved';
-        booking.approvedBy = approvedBy || 'Admin';
-        booking.approvedAt = new Date();
-        
-        await booking.save();
-
-        // Automatically mark vehicle as unavailable if vehicleId is present
-        if (booking.vehicleId) {
-            try {
-                const Vehicle = require('../models/Vehicle');
-                const vehicle = await Vehicle.findById(booking.vehicleId);
-                if (vehicle) {
-                    vehicle.availability = false;
-                    await vehicle.save();
-                    console.log(`Vehicle ${booking.vehicleId} marked as unavailable upon booking approval`);
-                }
-            } catch (vErr) {
-                console.error('Failed to update vehicle availability:', vErr);
-                // We don't fail the whole request if vehicle update fails, but we log it
-            }
-        }
-        
-        console.log('Booking approved successfully:', id);
-        console.log('New booking status:', booking.status);
-        
         res.status(200).json({
             success: true,
             message: 'Booking approved successfully',
-            booking: {
-                id: booking._id,
-                status: booking.status,
-                approvedBy: booking.approvedBy,
-                approvedAt: booking.approvedAt
-            }
+            booking: result.booking,
+            payment: result.paymentResult
         });
     } catch (err) {
         console.error('Error approving booking:', err);
-        console.error('Error stack:', err.stack);
         res.status(500).json({
             success: false,
             error: 'Failed to approve booking',
-            message: err.message,
-            details: err.toString()
+            message: err.message
         });
     }
 });
@@ -438,36 +409,21 @@ router.patch('/:id/approve', async (req, res) => {
 router.patch('/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
-        const { rejectedBy, rejectionReason } = req.body; // Admin email/name and reason
-        
+        const { rejectedBy, rejectionReason } = req.body;
+
         if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid booking ID format'
-            });
+            return res.status(400).json({ success: false, error: 'Invalid booking ID format' });
         }
 
-        const booking = await Booking.findById(id);
-        
-        if (!booking) {
-            return res.status(404).json({
-                success: false,
-                error: 'Booking not found'
-            });
+        const result = await rejectBooking(id, rejectedBy || 'Admin', rejectionReason);
+        if (!result.ok) {
+            return res.status(404).json({ success: false, error: result.error });
         }
 
-        booking.status = 'rejected';
-        booking.rejectedBy = rejectedBy || 'Admin';
-        booking.rejectedAt = new Date();
-        booking.rejectionReason = rejectionReason || 'No reason provided';
-        
-        await booking.save();
-        
-        console.log('Booking rejected successfully:', id);
         res.status(200).json({
-            success: false,
+            success: true,
             message: 'Booking rejected successfully',
-            booking
+            booking: result.booking
         });
     } catch (err) {
         console.error('Error rejecting booking:', err);

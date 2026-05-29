@@ -23,11 +23,22 @@ const BookingSchema = new mongoose.Schema({
   
   // Status and timestamps
   status: { type: String, default: 'pending', enum: ['pending', 'approved', 'rejected', 'cancelled', 'new', 'confirmed'] },
-  approvedBy: { type: String }, // Admin who approved
-  approvedAt: { type: Date }, // When it was approved
-  rejectedBy: { type: String }, // Admin who rejected
-  rejectedAt: { type: Date }, // When it was rejected
-  rejectionReason: { type: String }, // Why it was rejected
+  approvedBy: { type: String },
+  approvedAt: { type: Date },
+  rejectedBy: { type: String },
+  rejectedAt: { type: Date },
+  rejectionReason: { type: String },
+
+  // M-Pesa payment tracking
+  paymentStatus: {
+    type: String,
+    default: 'unpaid',
+    enum: ['unpaid', 'pending', 'paid', 'failed']
+  },
+  mpesaReceiptNumber: { type: String },
+  amountPaid: { type: Number },
+  paidAt: { type: Date },
+
   createdAt: { type: Date, default: Date.now }
 });
 
