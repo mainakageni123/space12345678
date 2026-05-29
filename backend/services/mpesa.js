@@ -184,11 +184,24 @@ const getAccessToken = async () => {
   }
 };
 
+/**
+ * KCB MpesaExpress payload (per KCB Buni spec):
+ * invoiceNumber = "{paybill}-{reference}" e.g. 522533-BK12345678
+ * sharedShortCode: true, orgShortCode/orgPassKey: ""
+ */
+const buildInvoiceNumber = (accountReference) => {
+  const ref =
+    String(accountReference)
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 20) || 'BOOKING';
+  return `${KCB_SHORTCODE}-${ref}`;
+};
+
 const initiateStkPush = async ({
   phoneNumber,
   amount,
   accountReference = 'SpaceBorne',
-  transactionDesc = 'Booking payment'
+  transactionDesc = 'Car hire booking payment'
 }) => {
   if (!KCB_CALLBACK_URL || KCB_CALLBACK_URL.includes('yourdomain')) {
     throw new Error('KCB_BUNI_CALLBACK_URL is not set to your live site URL');
@@ -200,8 +213,7 @@ const initiateStkPush = async ({
   const formattedPhone = formatPhoneNumber(phoneNumber);
   const accessToken = await getAccessToken();
 
-  const ref = String(accountReference).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20) || 'BOOKING';
-  const invoiceNumber = `${KCB_SHORTCODE}-${ref}`;
+  const invoiceNumber = buildInvoiceNumber(accountReference);
 
   const payload = {
     phoneNumber: formattedPhone,
