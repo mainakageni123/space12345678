@@ -6,7 +6,7 @@ const KCB_CONSUMER_SECRET = process.env.KCB_BUNI_CONSUMER_SECRET || process.env.
 const KCB_SHORTCODE = process.env.KCB_BUNI_ORG_SHORTCODE || process.env.MPESA_SHORTCODE || '';
 const KCB_PASSKEY = process.env.KCB_BUNI_ORG_PASSKEY || process.env.MPESA_PASSKEY || '';
 const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback';
-const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || 'sandbox';
+const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || '';
 
 // Use live KCB endpoints when env value starts with "prod" (e.g. production in Netlify dashboard)
 const useKcbLive = () => String(KCB_ENV || '').toLowerCase().startsWith('prod');
