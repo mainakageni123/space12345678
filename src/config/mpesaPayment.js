@@ -1,14 +1,13 @@
 import { API_BASE_URL } from './api';
 
 /**
- * Initiate M-Pesa STK push (generic or linked to bookingId).
+ * Initiate M-Pesa STK push via backend (KCB Buni).
  */
 export async function initiateMpesaPayment({
   phoneNumber,
   amount,
   accountReference,
   bookingId,
-  bookingType,
   serviceName,
   customerName
 }) {
@@ -16,10 +15,12 @@ export async function initiateMpesaPayment({
     ? `${API_BASE_URL}/mpesa/pay-booking/${bookingId}`
     : `${API_BASE_URL}/mpesa/stkpush`;
 
+  const normalizedPhone = String(phoneNumber || '').replace(/\s/g, '');
+
   const body = bookingId
-    ? { phoneNumber }
+    ? { phoneNumber: normalizedPhone }
     : {
-        phoneNumber,
+        phoneNumber: normalizedPhone,
         amount,
         accountReference: accountReference || `BOOKING_${bookingId || Date.now()}`,
         transactionDesc: serviceName || customerName || 'SpaceBorne booking',
@@ -42,62 +43,13 @@ export async function initiateMpesaPayment({
     };
   }
 
-  const checkoutRequestId =
-    data.data?.CheckoutRequestID || data.data?.checkoutRequestId;
-
-  if (checkoutRequestId) {
-    const pollResult = await pollMpesaPayment(checkoutRequestId);
-    return pollResult;
-  }
+  const customerMessage =
+    data.data?.CustomerMessage || data.message || 'Check your phone for the M-Pesa PIN prompt.';
 
   return {
     success: false,
     pending: true,
-    message: data.message || 'Check your phone for the M-Pesa prompt.'
-  };
-}
-
-async function pollMpesaPayment(checkoutRequestId, maxAttempts = 25) {
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise((r) => setTimeout(r, 2000));
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/mpesa/query`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkoutRequestId })
-      });
-      const data = await response.json();
-      if (!data.success) continue;
-
-      const resultCode = data.data?.ResultCode;
-      const paymentStatus = data.payment?.status;
-
-      if (paymentStatus === 'completed' || resultCode === '0' || resultCode === 0) {
-        return {
-          success: true,
-          message: 'Payment received. Thank you!',
-          checkoutRequestId,
-          receipt: data.payment?.mpesaReceiptNumber
-        };
-      }
-
-      if (resultCode && resultCode !== '1032' && resultCode !== 1032) {
-        return {
-          success: false,
-          pending: false,
-          message: data.data?.ResultDesc || 'Payment was not completed'
-        };
-      }
-    } catch {
-      /* keep polling */
-    }
-  }
-
-  return {
-    success: false,
-    pending: true,
-    message:
-      'STK push sent. Enter your M-Pesa PIN on your phone. Payment may take a moment to confirm.'
+    message: customerMessage,
+    checkoutRequestId: data.data?.CheckoutRequestID
   };
 }

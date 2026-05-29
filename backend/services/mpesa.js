@@ -5,25 +5,40 @@ const axiosKcb = axios.create({ timeout: KCB_HTTP_TIMEOUT_MS });
 
 let configLogged = false;
 
-// KCB Buni Credentials (with fallback to standard MPESA variables)
 const KCB_CONSUMER_KEY = process.env.KCB_BUNI_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY || '';
 const KCB_CONSUMER_SECRET = process.env.KCB_BUNI_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET || '';
 const KCB_SHORTCODE = process.env.KCB_BUNI_ORG_SHORTCODE || process.env.MPESA_SHORTCODE || '';
-const KCB_PASSKEY = process.env.KCB_BUNI_ORG_PASSKEY || process.env.MPESA_PASSKEY || '';
-const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback';
+const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || '';
 const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || '';
 
 const useKcbLive = () => String(KCB_ENV || '').toLowerCase().startsWith('prod');
 
-const UAT_TOKEN_URL =
-  process.env.KCB_BUNI_UAT_TOKEN_URL || 'https://uat.buni.kcbgroup.com/token';
-const LIVE_TOKEN_URL = process.env.KCB_BUNI_TOKEN_URL || 'https://accounts.buni.kcbgroup.com/oauth2/token';
-const UAT_REQUEST_URL =
-  process.env.KCB_BUNI_UAT_STK_PUSH_URL || 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0';
-const LIVE_REQUEST_URL = process.env.KCB_BUNI_STK_PUSH_URL || 'https://api.kcbgroup.com/mm/api/request/1.0.0';
+const getKcbBaseUrl = () => {
+  if (process.env.KCB_BUNI_BASE_URL) {
+    return process.env.KCB_BUNI_BASE_URL.replace(/\/$/, '');
+  }
+  return useKcbLive() ? 'https://api.buni.kcbgroup.com' : 'https://uat.buni.kcbgroup.com';
+};
 
-const getTokenUrl = () => (useKcbLive() ? LIVE_TOKEN_URL : UAT_TOKEN_URL);
-const getRequestUrl = () => (useKcbLive() ? LIVE_REQUEST_URL : UAT_REQUEST_URL);
+const getTokenUrl = () => {
+  if (useKcbLive() && process.env.KCB_BUNI_TOKEN_URL) {
+    return process.env.KCB_BUNI_TOKEN_URL;
+  }
+  if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
+    return process.env.KCB_BUNI_UAT_TOKEN_URL;
+  }
+  return `${getKcbBaseUrl()}/token?grant_type=client_credentials`;
+};
+
+const getStkPushUrl = () => {
+  if (useKcbLive() && process.env.KCB_BUNI_STK_PUSH_URL) {
+    return process.env.KCB_BUNI_STK_PUSH_URL;
+  }
+  if (!useKcbLive() && process.env.KCB_BUNI_UAT_STK_PUSH_URL) {
+    return process.env.KCB_BUNI_UAT_STK_PUSH_URL;
+  }
+  return `${getKcbBaseUrl()}/mm/api/request/1.0.0/stkpush`;
+};
 
 const logKcbConfig = () => {
   if (configLogged) return;
@@ -35,8 +50,9 @@ const logKcbConfig = () => {
     consumerSecret: KCB_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: KCB_SHORTCODE ? 'SET' : 'MISSING',
     callbackUrl: KCB_CALLBACK_URL ? 'SET' : 'MISSING',
-    tokenHost: getTokenUrl().replace(/\/token.*$/, ''),
-    stkHost: getRequestUrl().replace(/\/mm\/api.*$/, '')
+    baseUrl: getKcbBaseUrl(),
+    tokenUrl: getTokenUrl().split('?')[0],
+    stkUrl: getStkPushUrl()
   });
 };
 
@@ -44,28 +60,57 @@ const formatKcbError = (err) => {
   const code = err.code || err.cause?.code;
   if (code === 'ETIMEDOUT' || code === 'ECONNABORTED') {
     return useKcbLive()
-      ? 'Payment gateway timed out. KCB live API may need your server IP whitelisted — contact buni@kcbgroup.com with your Netlify outbound IP.'
-      : 'Payment gateway timed out. KCB UAT may block cloud hosts — try again or test from a whitelisted server.';
+      ? 'Could not reach KCB payment servers from this host. Ask KCB (buni@kcbgroup.com) to whitelist Netlify/AWS outbound IPs for your Paybill.'
+      : 'KCB test server timed out. Cloud hosts are often blocked — use UAT from a local machine or ask KCB to whitelist your server IP.';
   }
   if (code === 'ENOTFOUND' || code === 'ECONNREFUSED') {
-    return 'Could not reach the payment gateway. Check KCB_BUNI_ENV and API URLs in environment variables.';
+    return 'Could not reach KCB. Set KCB_BUNI_BASE_URL or check KCB_BUNI_ENV in Netlify environment variables.';
   }
-  return err.response?.data?.errorMessage || err.response?.data?.message || err.message;
+  const data = err.response?.data;
+  const msg =
+    data?.errorMessage ||
+    data?.error_description ||
+    data?.header?.statusDescription ||
+    data?.response?.ResponseDescription ||
+    data?.message;
+  return msg || err.message;
 };
 
 const formatPhoneNumber = (phoneNumber) => {
-  let formatted = phoneNumber.toString().trim();
-  if (formatted.startsWith('0')) {
-    formatted = '254' + formatted.substring(1);
-  } else if (formatted.startsWith('+254')) {
-    formatted = formatted.substring(1);
-  } else if (!formatted.startsWith('254')) {
-    formatted = '254' + formatted;
+  let digits = String(phoneNumber || '').replace(/\D/g, '');
+  if (digits.startsWith('0')) {
+    digits = '254' + digits.slice(1);
+  } else if (digits.startsWith('254')) {
+    /* ok */
+  } else if (digits.length === 9) {
+    digits = '254' + digits;
+  } else if (!digits.startsWith('254')) {
+    digits = '254' + digits;
   }
-  if (!/^254[17]\d{8}$/.test(formatted)) {
-    throw new Error('Invalid phone number format. Use 0712345678 or 254712345678');
+  if (!/^254[17]\d{8}$/.test(digits)) {
+    throw new Error('Invalid phone number. Use 0712345678 or 254712345678');
   }
-  return formatted;
+  return digits;
+};
+
+const parseKcbStkResponse = (data) => {
+  const body = data?.response || data;
+  const header = data?.header;
+  const responseCode = body?.ResponseCode ?? header?.statusCode;
+  if (responseCode !== undefined && responseCode !== '0' && responseCode !== 0) {
+    throw new Error(
+      body?.ResponseDescription ||
+        header?.statusDescription ||
+        'M-Pesa request was rejected by KCB'
+    );
+  }
+  return {
+    MerchantRequestID: body?.MerchantRequestID,
+    CheckoutRequestID: body?.CheckoutRequestID,
+    ResponseCode: body?.ResponseCode ?? '0',
+    ResponseDescription: body?.ResponseDescription || header?.statusDescription,
+    CustomerMessage: body?.CustomerMessage || 'Check your phone for the M-Pesa PIN prompt.'
+  };
 };
 
 const getAccessToken = async () => {
@@ -74,14 +119,16 @@ const getAccessToken = async () => {
     throw new Error('KCB Buni API credentials not configured');
   }
   if (!KCB_ENV) {
-    console.warn('[KCB] KCB_BUNI_ENV is not set — defaulting to UAT endpoints');
+    console.warn('[KCB] KCB_BUNI_ENV is not set — using UAT base URL');
   }
+
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
+  const tokenUrl = getTokenUrl();
 
   try {
     const response = await axiosKcb.post(
-      getTokenUrl(),
-      'grant_type=client_credentials',
+      tokenUrl,
+      {},
       {
         headers: {
           Authorization: `Basic ${auth}`,
@@ -89,7 +136,11 @@ const getAccessToken = async () => {
         }
       }
     );
-    return response.data.access_token;
+    const token = response.data?.access_token || response.data?.accessToken;
+    if (!token) {
+      throw new Error('KCB token response did not include access_token');
+    }
+    return token;
   } catch (err) {
     const msg = formatKcbError(err);
     console.error('[KCB] token request failed:', msg, err.code || '');
@@ -97,19 +148,24 @@ const getAccessToken = async () => {
   }
 };
 
-/**
- * Initiate M-Pesa STK push via KCB Buni MpesaExpressAPIService
- */
 const initiateStkPush = async ({
   phoneNumber,
   amount,
   accountReference = 'SpaceBorne',
   transactionDesc = 'Booking payment'
 }) => {
+  if (!KCB_CALLBACK_URL || KCB_CALLBACK_URL.includes('yourdomain')) {
+    throw new Error('KCB_BUNI_CALLBACK_URL is not set to your live site URL');
+  }
+  if (!KCB_SHORTCODE) {
+    throw new Error('KCB_BUNI_ORG_SHORTCODE is not configured');
+  }
+
   const formattedPhone = formatPhoneNumber(phoneNumber);
   const accessToken = await getAccessToken();
 
-  const invoiceNumber = `${KCB_SHORTCODE}-${accountReference}`;
+  const ref = String(accountReference).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20) || 'BOOKING';
+  const invoiceNumber = `${KCB_SHORTCODE}-${ref}`;
 
   const payload = {
     phoneNumber: formattedPhone,
@@ -122,41 +178,49 @@ const initiateStkPush = async ({
     callbackUrl: KCB_CALLBACK_URL
   };
 
-  let response;
+  console.log('[KCB] STK push request:', {
+    phone: formattedPhone,
+    amount: payload.amount,
+    invoiceNumber,
+    stkUrl: getStkPushUrl()
+  });
+
   try {
-    response = await axiosKcb.post(getRequestUrl(), payload, {
+    const response = await axiosKcb.post(getStkPushUrl(), payload, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
+
+    const parsed = parseKcbStkResponse(response.data);
+    console.log('[KCB] STK push accepted:', parsed.CheckoutRequestID || 'ok');
+
+    return {
+      ...parsed,
+      formattedPhone
+    };
   } catch (err) {
     const msg = formatKcbError(err);
     console.error('[KCB] STK push failed:', msg, err.code || '');
     throw new Error(msg);
   }
-
-  return {
-    MerchantRequestID: response.data.MerchantRequestID || invoiceNumber,
-    CheckoutRequestID: response.data.CheckoutRequestID || `CH_${Date.now()}`,
-    ResponseCode: response.data.ResponseCode || '0',
-    ResponseDescription:
-      response.data.ResponseDescription || 'Success. Request accepted for processing',
-    CustomerMessage:
-      response.data.CustomerMessage || 'Check your phone for the M-Pesa prompt.',
-    formattedPhone
-  };
 };
 
 const queryStkStatus = async () => ({
   ResponseCode: '0',
-  ResponseDescription: 'Query received. Status will be updated via M-Pesa Callback webhook.',
-  ResultCode: '0',
-  ResultDesc: 'Pending callback'
+  ResponseDescription: 'Awaiting M-Pesa callback',
+  ResultCode: '1032',
+  ResultDesc: 'Pending'
 });
 
 const isMpesaConfigured = () =>
-  Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_SHORTCODE);
+  Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_SHORTCODE && KCB_CALLBACK_URL);
+
+const testKcbConnection = async () => {
+  const token = await getAccessToken();
+  return { ok: true, tokenReceived: Boolean(token) };
+};
 
 module.exports = {
   formatPhoneNumber,
@@ -165,5 +229,8 @@ module.exports = {
   isMpesaConfigured,
   logKcbConfig,
   formatKcbError,
+  testKcbConnection,
+  getKcbBaseUrl,
+  useKcbLive,
   MPESA_CALLBACK_URL: KCB_CALLBACK_URL
 };

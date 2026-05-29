@@ -8,7 +8,10 @@ const {
   isMpesaConfigured,
   formatPhoneNumber,
   logKcbConfig,
-  formatKcbError
+  formatKcbError,
+  testKcbConnection,
+  getKcbBaseUrl,
+  useKcbLive
 } = require('../services/mpesa');
 const { startBookingPayment, handleMpesaCallback } = require('../services/bookingWorkflow');
 
@@ -18,11 +21,29 @@ router.get('/status', (req, res) => {
     success: true,
     configured: isMpesaConfigured(),
     env: process.env.KCB_BUNI_ENV ? 'SET' : 'MISSING',
+    mode: useKcbLive() ? 'live' : 'uat',
+    baseUrl: getKcbBaseUrl(),
     consumerKey: process.env.KCB_BUNI_CONSUMER_KEY ? 'SET' : 'MISSING',
     consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: process.env.KCB_BUNI_ORG_SHORTCODE ? 'SET' : 'MISSING',
     callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING'
   });
+});
+
+router.get('/test-connection', async (req, res) => {
+  try {
+    if (!isMpesaConfigured()) {
+      return res.status(503).json({ success: false, error: 'KCB not fully configured' });
+    }
+    const result = await testKcbConnection();
+    res.json({ success: true, message: 'KCB token obtained', ...result });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: formatKcbError(error),
+      message: error.message
+    });
+  }
 });
 
 router.post('/stkpush', async (req, res) => {
