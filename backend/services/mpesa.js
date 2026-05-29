@@ -8,17 +8,17 @@ const KCB_PASSKEY = process.env.KCB_BUNI_ORG_PASSKEY || process.env.MPESA_PASSKE
 const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback';
 const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || '';
 
-// Use live KCB endpoints when env value starts with "prod" (e.g. production in Netlify dashboard)
 const useKcbLive = () => String(KCB_ENV || '').toLowerCase().startsWith('prod');
 
-// Endpoints (configurable via environment variables)
-const SANDBOX_TOKEN_URL = process.env.KCB_BUNI_SANDBOX_TOKEN_URL || 'https://uat.buni.kcbgroup.com/token';
+const UAT_TOKEN_URL =
+  process.env.KCB_BUNI_UAT_TOKEN_URL || 'https://uat.buni.kcbgroup.com/token';
 const LIVE_TOKEN_URL = process.env.KCB_BUNI_TOKEN_URL || 'https://accounts.buni.kcbgroup.com/oauth2/token';
-const SANDBOX_REQUEST_URL = process.env.KCB_BUNI_SANDBOX_STK_PUSH_URL || 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0';
+const UAT_REQUEST_URL =
+  process.env.KCB_BUNI_UAT_STK_PUSH_URL || 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0';
 const LIVE_REQUEST_URL = process.env.KCB_BUNI_STK_PUSH_URL || 'https://api.kcbgroup.com/mm/api/request/1.0.0';
 
-const getTokenUrl = () => (useKcbLive() ? LIVE_TOKEN_URL : SANDBOX_TOKEN_URL);
-const getRequestUrl = () => (useKcbLive() ? LIVE_REQUEST_URL : SANDBOX_REQUEST_URL);
+const getTokenUrl = () => (useKcbLive() ? LIVE_TOKEN_URL : UAT_TOKEN_URL);
+const getRequestUrl = () => (useKcbLive() ? LIVE_REQUEST_URL : UAT_REQUEST_URL);
 
 const formatPhoneNumber = (phoneNumber) => {
   let formatted = phoneNumber.toString().trim();
@@ -40,13 +40,13 @@ const getAccessToken = async () => {
     throw new Error('KCB Buni API credentials not configured');
   }
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
-  
+
   const response = await axios.post(
     getTokenUrl(),
     'grant_type=client_credentials',
     {
       headers: {
-        'Authorization': `Basic ${auth}`,
+        Authorization: `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }
@@ -56,7 +56,6 @@ const getAccessToken = async () => {
 
 /**
  * Initiate M-Pesa STK push via KCB Buni MpesaExpressAPIService
- * @returns {Promise<{ MerchantRequestID, CheckoutRequestID, ResponseCode, ResponseDescription, CustomerMessage }>}
  */
 const initiateStkPush = async ({
   phoneNumber,
@@ -67,51 +66,44 @@ const initiateStkPush = async ({
   const formattedPhone = formatPhoneNumber(phoneNumber);
   const accessToken = await getAccessToken();
 
-  // invoiceNumber MUST be in the format: {Paybill/Till}-{Reference}
   const invoiceNumber = `${KCB_SHORTCODE}-${accountReference}`;
 
   const payload = {
     phoneNumber: formattedPhone,
     amount: String(Math.ceil(Number(amount))),
-    invoiceNumber: invoiceNumber,
-    sharedShortCode: true, // KCB handles STK push through their shared shortcode
-    orgShortCode: "",      // Must be empty when sharedShortCode is true
-    orgPassKey: "",        // Must be empty when sharedShortCode is true
+    invoiceNumber,
+    sharedShortCode: true,
+    orgShortCode: '',
+    orgPassKey: '',
     transactionDescription: transactionDesc.slice(0, 50),
     callbackUrl: KCB_CALLBACK_URL
   };
 
-  const response = await axios.post(
-    getRequestUrl(),
-    payload,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
+  const response = await axios.post(getRequestUrl(), payload, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
     }
-  );
+  });
 
   return {
     MerchantRequestID: response.data.MerchantRequestID || invoiceNumber,
     CheckoutRequestID: response.data.CheckoutRequestID || `CH_${Date.now()}`,
     ResponseCode: response.data.ResponseCode || '0',
-    ResponseDescription: response.data.ResponseDescription || 'Success. Request accepted for processing',
-    CustomerMessage: response.data.CustomerMessage || 'Check your phone for the M-Pesa prompt.',
+    ResponseDescription:
+      response.data.ResponseDescription || 'Success. Request accepted for processing',
+    CustomerMessage:
+      response.data.CustomerMessage || 'Check your phone for the M-Pesa prompt.',
     formattedPhone
   };
 };
 
-const queryStkStatus = async (checkoutRequestId) => {
-  // KCB Buni relies primarily on Callback/Webhooks for transaction status updates.
-  // We return a safe pending response structure here.
-  return {
-    ResponseCode: "0",
-    ResponseDescription: "Query received. Status will be updated via M-Pesa Callback webhook.",
-    ResultCode: "0",
-    ResultDesc: "Pending callback"
-  };
-};
+const queryStkStatus = async () => ({
+  ResponseCode: '0',
+  ResponseDescription: 'Query received. Status will be updated via M-Pesa Callback webhook.',
+  ResultCode: '0',
+  ResultDesc: 'Pending callback'
+});
 
 const isMpesaConfigured = () =>
   Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_SHORTCODE);
