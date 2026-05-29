@@ -5,11 +5,13 @@ const axiosKcb = axios.create({ timeout: KCB_HTTP_TIMEOUT_MS });
 
 let configLogged = false;
 
-const KCB_CONSUMER_KEY = process.env.KCB_BUNI_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY || '';
-const KCB_CONSUMER_SECRET = process.env.KCB_BUNI_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET || '';
-const KCB_SHORTCODE = process.env.KCB_BUNI_ORG_SHORTCODE || process.env.MPESA_SHORTCODE || '';
-const KCB_CALLBACK_URL = process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || '';
-const KCB_ENV = process.env.KCB_BUNI_ENV || process.env.MPESA_ENV || '';
+const envTrim = (value) => String(value || '').trim();
+
+const KCB_CONSUMER_KEY = envTrim(process.env.KCB_BUNI_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY);
+const KCB_CONSUMER_SECRET = envTrim(process.env.KCB_BUNI_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET);
+const KCB_SHORTCODE = envTrim(process.env.KCB_BUNI_ORG_SHORTCODE || process.env.MPESA_SHORTCODE);
+const KCB_CALLBACK_URL = envTrim(process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL);
+const KCB_ENV = envTrim(process.env.KCB_BUNI_ENV || process.env.MPESA_ENV);
 
 const useKcbLive = () => String(KCB_ENV || '').toLowerCase().startsWith('prod');
 
@@ -72,8 +74,42 @@ const formatKcbError = (err) => {
     data?.error_description ||
     data?.header?.statusDescription ||
     data?.response?.ResponseDescription ||
-    data?.message;
-  return msg || err.message;
+    data?.message ||
+    err.message;
+
+  const text = String(msg || '');
+  if (/oauth client could not be found|invalid_client|unauthorized_client/i.test(text)) {
+    const mode = useKcbLive() ? 'live (api.buni)' : 'UAT (uat.buni)';
+    return (
+      `KCB rejected your Consumer Key on ${mode}. ` +
+      'In Netlify: copy KCB_BUNI_CONSUMER_KEY and SECRET exactly from Buni (PROD KEYS tab if KCB_BUNI_ENV starts with prod). ' +
+      'Redeploy after changing env vars.'
+    );
+  }
+  return text;
+};
+
+const getKcbDiagnostics = () => {
+  const rawKey = process.env.KCB_BUNI_CONSUMER_KEY || '';
+  const rawSecret = process.env.KCB_BUNI_CONSUMER_SECRET || '';
+  const keyHadWhitespace = rawKey !== rawKey.trim();
+  const secretHadWhitespace = rawSecret !== rawSecret.trim();
+
+  return {
+    mode: useKcbLive() ? 'live' : 'uat',
+    baseUrl: getKcbBaseUrl(),
+    envValue: KCB_ENV || null,
+    consumerKeyLength: KCB_CONSUMER_KEY.length,
+    consumerSecretLength: KCB_CONSUMER_SECRET.length,
+    consumerKeyPreview: KCB_CONSUMER_KEY
+      ? `${KCB_CONSUMER_KEY.slice(0, 4)}…${KCB_CONSUMER_KEY.slice(-4)}`
+      : null,
+    keyHadWhitespace,
+    secretHadWhitespace,
+    hint: useKcbLive()
+      ? 'Use PROD KEYS from Buni → DefaultApplication → PROD KEYS'
+      : 'Use SANDBOX KEYS from Buni, or set KCB_BUNI_ENV empty / non-prod for UAT'
+  };
 };
 
 const formatPhoneNumber = (phoneNumber) => {
@@ -230,6 +266,7 @@ module.exports = {
   logKcbConfig,
   formatKcbError,
   testKcbConnection,
+  getKcbDiagnostics,
   getKcbBaseUrl,
   useKcbLive,
   MPESA_CALLBACK_URL: KCB_CALLBACK_URL

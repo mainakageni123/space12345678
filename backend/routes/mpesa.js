@@ -10,6 +10,7 @@ const {
   logKcbConfig,
   formatKcbError,
   testKcbConnection,
+  getKcbDiagnostics,
   getKcbBaseUrl,
   useKcbLive
 } = require('../services/mpesa');
@@ -17,16 +18,16 @@ const { startBookingPayment, handleMpesaCallback } = require('../services/bookin
 
 router.get('/status', (req, res) => {
   logKcbConfig();
+  const diagnostics = getKcbDiagnostics();
   res.json({
     success: true,
     configured: isMpesaConfigured(),
     env: process.env.KCB_BUNI_ENV ? 'SET' : 'MISSING',
-    mode: useKcbLive() ? 'live' : 'uat',
-    baseUrl: getKcbBaseUrl(),
     consumerKey: process.env.KCB_BUNI_CONSUMER_KEY ? 'SET' : 'MISSING',
     consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: process.env.KCB_BUNI_ORG_SHORTCODE ? 'SET' : 'MISSING',
-    callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING'
+    callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING',
+    ...diagnostics
   });
 });
 
@@ -41,7 +42,8 @@ router.get('/test-connection', async (req, res) => {
     res.status(500).json({
       success: false,
       error: formatKcbError(error),
-      message: error.message
+      message: error.message,
+      diagnostics: getKcbDiagnostics()
     });
   }
 });
