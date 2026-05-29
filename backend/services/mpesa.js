@@ -29,7 +29,11 @@ const getTokenUrl = () => {
   if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
     return process.env.KCB_BUNI_UAT_TOKEN_URL;
   }
-  return `${getKcbBaseUrl()}/token?grant_type=client_credentials`;
+  // Live keys from Buni portal use WSO2 OAuth (see Production Keys → Token Endpoint)
+  if (useKcbLive()) {
+    return 'https://accounts.buni.kcbgroup.com/oauth2/token';
+  }
+  return 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials';
 };
 
 const getStkPushUrl = () => {
@@ -160,11 +164,12 @@ const getAccessToken = async () => {
 
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
   const tokenUrl = getTokenUrl();
+  const isOAuth2Token = tokenUrl.includes('/oauth2/token');
 
   try {
     const response = await axiosKcb.post(
       tokenUrl,
-      {},
+      isOAuth2Token ? 'grant_type=client_credentials' : {},
       {
         headers: {
           Authorization: `Basic ${auth}`,
