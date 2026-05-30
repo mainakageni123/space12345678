@@ -191,7 +191,7 @@ const getAccessToken = async () => {
 
 /**
  * KCB MpesaExpress payload (per KCB Buni spec):
- * invoiceNumber = "{paybill}-{reference}" e.g. 522533-BK12345678
+ * invoiceNumber = "{paybill}-{reference}" e.g. {paybill}-BK12345678
  * sharedShortCode: true, orgShortCode/orgPassKey: ""
  */
 const buildInvoiceNumber = (accountReference) => {
