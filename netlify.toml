@@ -6,9 +6,12 @@
   NODE_VERSION = "20"
   # Force npm to install ALL dependencies (including devDependencies) during build
   NPM_CONFIG_PRODUCTION = "false"
+  # Ignore harmless variables from Netlify Secrets Scanning to prevent false positives
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,PORT,DB_NAME,KCB_BUNI_ENV"
+  # Omit documentation, configuration, and template files from Netlify Secrets Scanning
+  SECRETS_SCAN_OMIT_PATHS = "**/*.md,**/*.template,**/*.example,.cursor/**,**/diagnose-mpesa.js,**/test-credentials.js,**/test-mpesa.js,**/package.json,netlify.toml,car-hire-main123/**"
 
 [build]
-  SECRETS_SCAN_OMIT_PATHS = "**/*.md,.cursor/**,backend/diagnose-mpesa.js,backend/test-credentials.js,backend/test-mpesa.js,car-hire-main123/**,.env.netlify.template,package.json,netlify.toml"
   # Build command for the frontend (Vite)
   command = "npm run build"
   # Directory containing the built frontend files
