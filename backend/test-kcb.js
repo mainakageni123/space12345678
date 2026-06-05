@@ -3,7 +3,7 @@ const { initiateStkPush } = require('./services/mpesa');
 
 async function testPayment() {
   console.log('Initiating KCB Buni Production STK Push test...');
-  console.log(`Using Shortcode: ${process.env.KCB_BUNI_ORG_SHORTCODE}`);
+  console.log(`Using Account Number: ${process.env.KCB_BUNI_ACCOUNT_NUMBER}`);
   
   try {
     const result = await initiateStkPush({

@@ -26,6 +26,7 @@ router.get('/status', (req, res) => {
     consumerKey: process.env.KCB_BUNI_CONSUMER_KEY ? 'SET' : 'MISSING',
     consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: process.env.KCB_BUNI_ORG_SHORTCODE ? 'SET' : 'MISSING',
+    accountNumber: process.env.KCB_BUNI_ACCOUNT_NUMBER ? 'SET' : 'MISSING',
     callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING',
     ...diagnostics
   });

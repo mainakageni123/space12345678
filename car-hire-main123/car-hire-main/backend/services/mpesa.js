@@ -10,6 +10,7 @@ const envTrim = (value) => String(value || '').trim();
 const KCB_CONSUMER_KEY = envTrim(process.env.KCB_BUNI_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY);
 const KCB_CONSUMER_SECRET = envTrim(process.env.KCB_BUNI_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET);
 const KCB_SHORTCODE = envTrim(process.env.KCB_BUNI_ORG_SHORTCODE || process.env.MPESA_SHORTCODE);
+const KCB_ACCOUNT_NUMBER = envTrim(process.env.KCB_BUNI_ACCOUNT_NUMBER);
 const KCB_CALLBACK_URL = envTrim(process.env.KCB_BUNI_CALLBACK_URL || process.env.MPESA_CALLBACK_URL);
 const KCB_ENV = envTrim(process.env.KCB_BUNI_ENV || process.env.MPESA_ENV);
 
@@ -55,6 +56,7 @@ const logKcbConfig = () => {
     consumerKey: KCB_CONSUMER_KEY ? 'SET' : 'MISSING',
     consumerSecret: KCB_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: KCB_SHORTCODE ? 'SET' : 'MISSING',
+    accountNumber: KCB_ACCOUNT_NUMBER ? 'SET' : 'MISSING',
     callbackUrl: KCB_CALLBACK_URL ? 'SET' : 'MISSING',
     baseUrl: getKcbBaseUrl(),
     tokenUrl: getTokenUrl().split('?')[0],
@@ -103,6 +105,10 @@ const getKcbDiagnostics = () => {
     mode: useKcbLive() ? 'live' : 'uat',
     baseUrl: getKcbBaseUrl(),
     envValue: KCB_ENV || null,
+    accountNumber: KCB_ACCOUNT_NUMBER || null,
+    invoiceNumberFormat: KCB_ACCOUNT_NUMBER
+      ? `${KCB_ACCOUNT_NUMBER}-{reference}`
+      : null,
     consumerKeyLength: KCB_CONSUMER_KEY.length,
     consumerSecretLength: KCB_CONSUMER_SECRET.length,
     consumerKeyPreview: KCB_CONSUMER_KEY
@@ -164,12 +170,12 @@ const getAccessToken = async () => {
 
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
   const tokenUrl = getTokenUrl();
-  const isOAuth2Token = tokenUrl.includes('/oauth2/token');
+  const hasGrantTypeInUrl = tokenUrl.includes('grant_type=');
 
   try {
     const response = await axiosKcb.post(
       tokenUrl,
-      isOAuth2Token ? 'grant_type=client_credentials' : {},
+      hasGrantTypeInUrl ? {} : 'grant_type=client_credentials',
       {
         headers: {
           Authorization: `Basic ${auth}`,
@@ -191,7 +197,7 @@ const getAccessToken = async () => {
 
 /**
  * KCB MpesaExpress payload (per KCB Buni spec):
- * invoiceNumber = "{paybill}-{reference}" e.g. {paybill}-BK12345678
+ * invoiceNumber = "{accountNumber}-{reference}" e.g. 7888067-BK12345678
  * sharedShortCode: true, orgShortCode/orgPassKey: ""
  */
 const buildInvoiceNumber = (accountReference) => {
@@ -199,7 +205,7 @@ const buildInvoiceNumber = (accountReference) => {
     String(accountReference)
       .replace(/[^a-zA-Z0-9]/g, '')
       .slice(0, 20) || 'BOOKING';
-  return `${KCB_SHORTCODE}-${ref}`;
+  return `${KCB_ACCOUNT_NUMBER}-${ref}`;
 };
 
 const initiateStkPush = async ({
@@ -211,8 +217,8 @@ const initiateStkPush = async ({
   if (!KCB_CALLBACK_URL || KCB_CALLBACK_URL.includes('yourdomain')) {
     throw new Error('KCB_BUNI_CALLBACK_URL is not set to your live site URL');
   }
-  if (!KCB_SHORTCODE) {
-    throw new Error('KCB_BUNI_ORG_SHORTCODE is not configured');
+  if (!KCB_ACCOUNT_NUMBER) {
+    throw new Error('KCB_BUNI_ACCOUNT_NUMBER is not configured');
   }
 
   const formattedPhone = formatPhoneNumber(phoneNumber);
@@ -268,7 +274,9 @@ const queryStkStatus = async () => ({
 });
 
 const isMpesaConfigured = () =>
-  Boolean(KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_SHORTCODE && KCB_CALLBACK_URL);
+  Boolean(
+    KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_ACCOUNT_NUMBER && KCB_CALLBACK_URL
+  );
 
 const testKcbConnection = async () => {
   const token = await getAccessToken();
