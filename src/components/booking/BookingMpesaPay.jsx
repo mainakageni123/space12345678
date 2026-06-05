@@ -16,8 +16,11 @@ const formatPhoneDisplay = (value) => {
   return `0${cleaned}`;
 };
 
+// Strip formatting to raw digits for validation and submission
+const stripPhone = (value) => String(value || '').replace(/\D/g, '');
+
 const isValidKenyanPhone = (phone) => {
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = stripPhone(phone);
   return cleaned.length === 10 && cleaned.startsWith('0') && (cleaned.startsWith('07') || cleaned.startsWith('01'));
 };
 
@@ -69,7 +72,7 @@ const BookingMpesaPay = ({
 
     try {
       const result = await initiateMpesaPayment({
-        phoneNumber: phoneNumber.replace(/\s/g, ''),
+        phoneNumber: stripPhone(phoneNumber),
         amount: resolvedAmount,
         accountReference: accountReference || `BOOKING_${bookingId || Date.now()}`,
         bookingId,
@@ -145,7 +148,17 @@ const BookingMpesaPay = ({
       </div>
 
       <div>
-        <label className={`block text-sm font-medium mb-2 ${labelClass}`}>M-Pesa phone number</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className={`block text-sm font-medium ${labelClass}`}>M-Pesa phone number</label>
+          <button
+            type="button"
+            onClick={() => { setPhoneNumber(''); setError(''); }}
+            className={`text-xs underline ${mutedClass} hover:opacity-70`}
+            disabled={loading}
+          >
+            Clear
+          </button>
+        </div>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Icon name="Phone" className={`w-4 h-4 ${mutedClass}`} />
@@ -154,12 +167,14 @@ const BookingMpesaPay = ({
             type="tel"
             value={phoneNumber}
             onChange={(e) => {
-              setPhoneNumber(formatPhoneDisplay(e.target.value));
+              // Allow free typing — no live formatting so cursor stays put
+              setPhoneNumber(e.target.value);
               setError('');
             }}
-            placeholder="0712 345 678"
+            placeholder="07XX XXX XXX"
             className={`block w-full pl-10 pr-3 py-3 rounded-lg border text-base focus:ring-2 focus:border-transparent ${inputClass}`}
             disabled={loading}
+            maxLength={15}
           />
         </div>
       </div>
