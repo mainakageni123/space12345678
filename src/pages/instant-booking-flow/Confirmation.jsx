@@ -98,7 +98,6 @@ const Confirmation = () => {
               accountReference={`BK_${String(bookingId).slice(-8)}`}
               serviceName={displayName}
               customerName={`${booking?.firstName} ${booking?.lastName}`}
-              allowAmountEntry={true}
             />
           )}
 

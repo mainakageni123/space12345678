@@ -35,13 +35,13 @@ const findBookingByIdOrSuffix = async (idPart) => {
 
 const shortBookingId = (id) => String(id).slice(-8).toUpperCase();
 
-const startBookingPayment = async (booking, overrideAmount = null) => {
+const startBookingPayment = async (booking) => {
   if (!isMpesaConfigured()) {
     console.warn('M-Pesa not configured — skipping STK push');
     return { stkSent: false, reason: 'mpesa_not_configured' };
   }
 
-  const amount = overrideAmount ? Number(overrideAmount) : Number(booking.vehiclePrice || 0);
+  const amount = Number(booking.vehiclePrice || 0);
   if (amount <= 0) {
     return { stkSent: false, reason: 'no_amount' };
   }
