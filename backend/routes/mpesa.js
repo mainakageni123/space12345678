@@ -201,7 +201,8 @@ router.post('/pay-booking/:bookingId', async (req, res) => {
       await booking.save();
     }
 
-    const result = await startBookingPayment(booking);
+    const { amount } = req.body || {};
+    const result = await startBookingPayment(booking, amount);
 
     if (!result.stkSent) {
       return res.status(400).json({

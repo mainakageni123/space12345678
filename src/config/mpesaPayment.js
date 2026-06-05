@@ -18,7 +18,7 @@ export async function initiateMpesaPayment({
   const normalizedPhone = String(phoneNumber || '').replace(/\s/g, '');
 
   const body = bookingId
-    ? { phoneNumber: normalizedPhone }
+    ? { phoneNumber: normalizedPhone, amount }
     : {
         phoneNumber: normalizedPhone,
         amount,
