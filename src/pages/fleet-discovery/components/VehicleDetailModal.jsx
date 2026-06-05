@@ -319,7 +319,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                     {isBelow6000 && (
                       <p className="text-[10px] text-amber-600 mt-2 flex items-start gap-1">
                         <Icon name="AlertTriangle" size={12} className="mt-0.5 flex-shrink-0" />
-                        <span>Daily 24-hour hire is unavailable for vehicles under KES 4,500. Please select an hourly rate or a multi-day rate (48 Hours+).</span>
+                        <span>Daily 24-hour hire is unavailable for vehicles under KES 6,000. Please select an hourly rate or a multi-day rate (48 Hours+).</span>
                       </p>
                     )}
                   </div>
