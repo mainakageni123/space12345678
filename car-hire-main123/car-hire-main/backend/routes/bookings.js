@@ -17,14 +17,14 @@ router.post('/', async (req, res) => {
         
         const { firstName, lastName, phoneNumber, email } = req.body;
 
-        // Validate duration for vehicles priced below KES 4,500
+        // Validate duration for vehicles priced below KES 6,000
         const vehiclePrice = Number(req.body.vehiclePrice || 0);
         const duration = req.body.duration;
-        if (req.body.vehicleId && vehiclePrice < 4500) {
+        if (req.body.vehicleId && vehiclePrice < 6000) {
             if (!duration || duration === '24 Hours' || duration === '24 hours') {
                 return res.status(400).json({
                     success: false,
-                    error: 'Vehicles priced below KES 4,500 cannot be booked for 24 Hours. Please choose an hourly or multi-day rate.'
+                    error: 'Vehicles priced below KES 6,000 cannot be booked for 24 Hours. Please choose an hourly or multi-day rate.'
                 });
             }
         }

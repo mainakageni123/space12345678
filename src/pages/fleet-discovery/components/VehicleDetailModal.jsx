@@ -23,7 +23,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
     return Number(vehicle?.pricing?.daily || vehicle?.pricePerDay || vehicle?.price || 0);
   }, [vehicle]);
 
-  const isBelow4500 = dailyPrice < 4500;
+  const isBelow6000 = dailyPrice < 6000;
 
   const pricingTiers = useMemo(() => {
     if (!vehicle?.pricing) return [];
@@ -45,7 +45,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
         label: selectedTier.label
       };
     }
-    if (isBelow4500) {
+    if (isBelow6000) {
       return {
         amount: null,
         label: 'Daily 24h booking not allowed'
@@ -60,7 +60,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
       amount: fallback != null ? Number(fallback) : null,
       label: 'Per day'
     };
-  }, [selectedTier, pricingTiers, vehicle, isBelow4500]);
+  }, [selectedTier, pricingTiers, vehicle, isBelow6000]);
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -276,7 +276,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                     {pricingTiers.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {pricingTiers.map((tier) => {
-                          const isDisabled = isBelow4500 && tier.id === 'daily';
+                          const isDisabled = isBelow6000 && tier.id === 'daily';
                           return (
                             <div 
                               key={tier.id}
@@ -316,7 +316,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                       </div>
                     )}
                     
-                    {isBelow4500 && (
+                    {isBelow6000 && (
                       <p className="text-[10px] text-amber-600 mt-2 flex items-start gap-1">
                         <Icon name="AlertTriangle" size={12} className="mt-0.5 flex-shrink-0" />
                         <span>Daily 24-hour hire is unavailable for vehicles under KES 4,500. Please select an hourly rate or a multi-day rate (48 Hours+).</span>
@@ -367,7 +367,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                   <p className="text-xl sm:text-2xl font-bold text-cosmic-depth">
                     {footerPricing.amount != null
                       ? `KES ${footerPricing.amount.toLocaleString()}`
-                      : isBelow4500 ? 'Select a duration' : 'Price on request'}
+                      : isBelow6000 ? 'Select a duration' : 'Price on request'}
                   </p>
                   <p className="text-sm text-text-refined">
                     {footerPricing.label}
@@ -388,10 +388,10 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                   <Button
                     variant="default"
                     onClick={() => onBookNow(vehicle, selectedTier)}
-                    disabled={!vehicle?.available || (isBelow4500 && !selectedTier)}
+                    disabled={!vehicle?.available || (isBelow6000 && !selectedTier)}
                     className="flex-1 sm:flex-none rounded-full bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
                   >
-                    {vehicle?.available ? (isBelow4500 && !selectedTier ? 'Select Rate' : 'Book Now') : 'Unavailable'}
+                    {vehicle?.available ? (isBelow6000 && !selectedTier ? 'Select Rate' : 'Book Now') : 'Unavailable'}
                   </Button>
                 </div>
               </div>

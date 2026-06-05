@@ -21,7 +21,7 @@ const PricingModal = ({ isOpen, onClose, vehicle, onBookNow }) => {
 
   const pricing = vehicle.pricing || {};
   const dailyPrice = Number(pricing.daily || vehicle.price || 0);
-  const isBelow4500 = dailyPrice < 4500;
+  const isBelow6000 = dailyPrice < 6000;
 
   // List of standard pricing tiers
   const tiers = [
@@ -80,7 +80,7 @@ const PricingModal = ({ isOpen, onClose, vehicle, onBookNow }) => {
           {activeTiers.length > 0 ? (
             <div className="space-y-2">
               {activeTiers.map((tier, idx) => {
-                const isDisabled = isBelow4500 && tier.duration === '24 hours';
+                const isDisabled = isBelow6000 && tier.duration === '24 hours';
                 return (
                   <div 
                     key={idx} 
@@ -131,10 +131,10 @@ const PricingModal = ({ isOpen, onClose, vehicle, onBookNow }) => {
             </div>
           )}
 
-          {isBelow4500 && (
+          {isBelow6000 && (
             <p className="text-[10px] text-amber-600 mt-2 flex items-start gap-1">
               <Icon name="AlertTriangle" size={12} className="mt-0.5 flex-shrink-0" />
-              <span>Daily 24-hour hire is unavailable for vehicles under KES 4,500. Please select an hourly rate or a multi-day rate.</span>
+              <span>Daily 24-hour hire is unavailable for vehicles under KES 6,000. Please select an hourly rate or a multi-day rate.</span>
             </p>
           )}
         </div>
@@ -147,14 +147,14 @@ const PricingModal = ({ isOpen, onClose, vehicle, onBookNow }) => {
           </div>
           <Button
             variant="default"
-            disabled={!vehicle.available || (isBelow4500 && !selectedTier)}
+            disabled={!vehicle.available || (isBelow6000 && !selectedTier)}
             onClick={() => {
               onClose();
               onBookNow(vehicle, selectedTier);
             }}
-            className={`${vehicle.available && !(isBelow4500 && !selectedTier) ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} px-5 py-2 font-bold text-xs shadow-md rounded-lg`}
+            className={`${vehicle.available && !(isBelow6000 && !selectedTier) ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} px-5 py-2 font-bold text-xs shadow-md rounded-lg`}
           >
-            {vehicle.available ? (isBelow4500 && !selectedTier ? 'Select Rate' : 'Book Now') : 'Not Available'}
+            {vehicle.available ? (isBelow6000 && !selectedTier ? 'Select Rate' : 'Book Now') : 'Not Available'}
           </Button>
         </div>
       </div>
