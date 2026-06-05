@@ -227,7 +227,8 @@ router.post('/pay-booking/:bookingId', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to initiate booking payment',
-      message: error.message
+      message: error.message,
+      diagnostics: getKcbDiagnostics()
     });
   }
 });

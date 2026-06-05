@@ -25,14 +25,19 @@ const getKcbBaseUrl = () => {
 
 const getTokenUrl = () => {
   if (useKcbLive() && process.env.KCB_BUNI_TOKEN_URL) {
-    return process.env.KCB_BUNI_TOKEN_URL;
+    const url = process.env.KCB_BUNI_TOKEN_URL;
+    // KCB Buni production requires grant_type in URL query string
+    if (!url.includes('grant_type=')) {
+      return url + (url.includes('?') ? '&' : '?') + 'grant_type=client_credentials';
+    }
+    return url;
   }
   if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
     return process.env.KCB_BUNI_UAT_TOKEN_URL;
   }
-  // Live keys from Buni portal use WSO2 OAuth (see Production Keys → Token Endpoint)
+  // Default production: Buni portal shows api.buni.kcbgroup.com/token
   if (useKcbLive()) {
-    return 'https://accounts.buni.kcbgroup.com/oauth2/token';
+    return 'https://api.buni.kcbgroup.com/token?grant_type=client_credentials';
   }
   return 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials';
 };
@@ -172,10 +177,17 @@ const getAccessToken = async () => {
   const tokenUrl = getTokenUrl();
   const hasGrantTypeInUrl = tokenUrl.includes('grant_type=');
 
+  console.log('[KCB] Token request:', {
+    url: tokenUrl.split('?')[0],
+    grantTypeInUrl: hasGrantTypeInUrl,
+    keyPreview: KCB_CONSUMER_KEY.slice(0, 6) + '...',
+    mode: useKcbLive() ? 'PRODUCTION' : 'UAT'
+  });
+
   try {
     const response = await axiosKcb.post(
       tokenUrl,
-      hasGrantTypeInUrl ? {} : 'grant_type=client_credentials',
+      hasGrantTypeInUrl ? undefined : 'grant_type=client_credentials',
       {
         headers: {
           Authorization: `Basic ${auth}`,
@@ -185,12 +197,21 @@ const getAccessToken = async () => {
     );
     const token = response.data?.access_token || response.data?.accessToken;
     if (!token) {
+      console.error('[KCB] Token response body:', JSON.stringify(response.data));
       throw new Error('KCB token response did not include access_token');
     }
+    console.log('[KCB] Token obtained successfully');
     return token;
   } catch (err) {
+    const status = err.response?.status;
+    const body = err.response?.data;
+    console.error('[KCB] Token request failed:', {
+      status,
+      body: JSON.stringify(body || {}),
+      code: err.code,
+      url: tokenUrl
+    });
     const msg = formatKcbError(err);
-    console.error('[KCB] token request failed:', msg, err.code || '');
     throw new Error(msg);
   }
 };
