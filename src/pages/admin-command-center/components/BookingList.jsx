@@ -611,19 +611,75 @@ const BookingList = () => {
                   {activeTab === 'pending' ? 'Quick Actions' : 'Booking Info'}
                 </h3>
                 <div className="space-y-3">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium gap-2
-                    ${booking.status === 'pending' || booking.status === 'new' ? 'bg-yellow-100 text-yellow-800' :
-                      booking.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'}`}>
-                    <Icon name={
-                      booking.status === 'pending' || booking.status === 'new' ? 'Clock' :
-                      booking.status === 'approved' ? 'CheckCircle' :
-                      booking.status === 'rejected' ? 'XCircle' :
-                      'Bell'
-                    } className="w-4 h-4" />
-                    {booking.status?.toUpperCase() || 'PENDING'}
+                  <div className="flex flex-col items-start gap-2">
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium gap-2
+                      ${booking.status === 'pending' || booking.status === 'new' ? 'bg-yellow-100 text-yellow-800' :
+                        booking.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'}`}>
+                      <Icon name={
+                        booking.status === 'pending' || booking.status === 'new' ? 'Clock' :
+                        booking.status === 'approved' ? 'CheckCircle' :
+                        booking.status === 'rejected' ? 'XCircle' :
+                        'Bell'
+                      } className="w-4 h-4" />
+                      {booking.status?.toUpperCase() || 'PENDING'}
+                    </div>
+
+                    {booking.paymentStatus && (
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold gap-1.5
+                        ${booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800 border border-green-200' :
+                          booking.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200 animate-pulse' :
+                          booking.paymentStatus === 'failed' ? 'bg-red-100 text-red-800 border border-red-200' :
+                          'bg-gray-100 text-gray-800 border border-gray-200'}`}>
+                        <Icon name={
+                          booking.paymentStatus === 'paid' ? 'Check' :
+                          booking.paymentStatus === 'pending' ? 'Clock' :
+                          booking.paymentStatus === 'failed' ? 'X' :
+                          'CreditCard'
+                        } size={12} />
+                        Payment: {booking.paymentStatus.toUpperCase()}
+                      </div>
+                    )}
                   </div>
+
+                  {booking.paymentStatus === 'paid' && (
+                    <div className="p-2.5 bg-green-50 border border-green-200 text-green-900 rounded-lg text-xs space-y-1 w-full max-w-[240px]">
+                      <div className="font-bold flex items-center gap-1">
+                        <Icon name="CheckCircle" size={12} className="text-green-600" />
+                        <span>M-Pesa Paid</span>
+                      </div>
+                      {booking.mpesaReceiptNumber && (
+                        <div><strong>Receipt:</strong> {booking.mpesaReceiptNumber}</div>
+                      )}
+                      {booking.amountPaid && (
+                        <div><strong>Amount:</strong> KES {booking.amountPaid.toLocaleString()}</div>
+                      )}
+                      {booking.paidAt && (
+                        <div className="text-[10px] text-green-700">
+                          {new Date(booking.paidAt).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {booking.paymentStatus === 'pending' && (
+                    <div className="p-2.5 bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg text-xs space-y-1 w-full max-w-[240px] animate-pulse">
+                      <div className="font-bold flex items-center gap-1">
+                        <Icon name="Clock" size={12} className="text-yellow-600" />
+                        <span>Awaiting PIN...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {booking.paymentStatus === 'failed' && (
+                    <div className="p-2.5 bg-red-50 border border-red-200 text-red-900 rounded-lg text-xs space-y-1 w-full max-w-[240px]">
+                      <div className="font-bold flex items-center gap-1">
+                        <Icon name="XCircle" size={12} className="text-red-600" />
+                        <span>Payment Failed</span>
+                      </div>
+                    </div>
+                  )}
                   
                   {activeTab === 'pending' ? (
                     /* Pending Actions */
