@@ -39,7 +39,8 @@ export async function initiateMpesaPayment({
     return {
       success: false,
       pending: false,
-      message: data.message || data.error || 'Could not start M-Pesa payment'
+      message: data.message || data.error || 'Could not start M-Pesa payment',
+      diagnostics: data.diagnostics || null
     };
   }
 
