@@ -19,6 +19,12 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
     return list.length > 0 ? list : ['/assets/images/no_image.png'];
   }, [vehicle]);
 
+  const dailyPrice = useMemo(() => {
+    return Number(vehicle?.pricing?.daily || vehicle?.pricePerDay || vehicle?.price || 0);
+  }, [vehicle]);
+
+  const isBelow4500 = dailyPrice < 4500;
+
   const pricingTiers = useMemo(() => {
     if (!vehicle?.pricing) return [];
     return [
@@ -39,6 +45,12 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
         label: selectedTier.label
       };
     }
+    if (isBelow4500) {
+      return {
+        amount: null,
+        label: 'Daily 24h booking not allowed'
+      };
+    }
     const daily = pricingTiers.find((t) => t.id === 'daily');
     if (daily) {
       return { amount: Number(daily.value), label: daily.label };
@@ -48,7 +60,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
       amount: fallback != null ? Number(fallback) : null,
       label: 'Per day'
     };
-  }, [selectedTier, pricingTiers, vehicle]);
+  }, [selectedTier, pricingTiers, vehicle, isBelow4500]);
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -263,20 +275,29 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                     
                     {pricingTiers.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        {pricingTiers.map((tier) => (
-                          <div 
-                            key={tier.id}
-                            onClick={() => setSelectedTier(tier)}
-                            className={`flex justify-between p-2 rounded border cursor-pointer transition-all ${
-                              selectedTier?.id === tier.id 
-                                ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' 
-                                : 'bg-white/50 border-gray-100 hover:bg-blue-50/40 hover:border-blue-100'
-                            } ${tier.id === 'daily' ? 'col-span-2' : ''}`}
-                          >
-                            <span className={`${tier.id === 'daily' ? 'font-semibold' : ''} text-text-refined`}>{tier.label}</span>
-                            <span className={`${tier.id === 'daily' ? 'font-extrabold' : 'font-bold'} text-cosmic-depth`}>KES {Number(tier.value).toLocaleString()}</span>
-                          </div>
-                        ))}
+                        {pricingTiers.map((tier) => {
+                          const isDisabled = isBelow4500 && tier.id === 'daily';
+                          return (
+                            <div 
+                              key={tier.id}
+                              onClick={() => !isDisabled && setSelectedTier(tier)}
+                              className={`flex justify-between p-2 rounded border transition-all ${
+                                isDisabled
+                                  ? 'bg-gray-100/70 border-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+                                  : selectedTier?.id === tier.id 
+                                    ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500 cursor-pointer' 
+                                    : 'bg-white/50 border-gray-100 hover:bg-blue-50/40 hover:border-blue-100 cursor-pointer'
+                              } ${tier.id === 'daily' ? 'col-span-2' : ''}`}
+                            >
+                              <span className={`${tier.id === 'daily' ? 'font-semibold' : ''} ${isDisabled ? 'text-gray-400' : 'text-text-refined'}`}>
+                                {tier.label} {isDisabled && '(Unavailable)'}
+                              </span>
+                              <span className={`${tier.id === 'daily' ? 'font-extrabold' : 'font-bold'} ${isDisabled ? 'text-gray-400' : 'text-cosmic-depth'}`}>
+                                KES {Number(tier.value).toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="flex items-center justify-between text-sm">
@@ -293,6 +314,13 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                           </p>
                         </div>
                       </div>
+                    )}
+                    
+                    {isBelow4500 && (
+                      <p className="text-[10px] text-amber-600 mt-2 flex items-start gap-1">
+                        <Icon name="AlertTriangle" size={12} className="mt-0.5 flex-shrink-0" />
+                        <span>Daily 24-hour hire is unavailable for vehicles under KES 4,500. Please select an hourly rate or a multi-day rate (48 Hours+).</span>
+                      </p>
                     )}
                   </div>
                 </div>
@@ -339,7 +367,7 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                   <p className="text-xl sm:text-2xl font-bold text-cosmic-depth">
                     {footerPricing.amount != null
                       ? `KES ${footerPricing.amount.toLocaleString()}`
-                      : 'Price on request'}
+                      : isBelow4500 ? 'Select a duration' : 'Price on request'}
                   </p>
                   <p className="text-sm text-text-refined">
                     {footerPricing.label}
@@ -360,10 +388,10 @@ const VehicleDetailModal = ({ vehicle, isOpen, onClose, onBookNow }) => {
                   <Button
                     variant="default"
                     onClick={() => onBookNow(vehicle, selectedTier)}
-                    disabled={!vehicle?.available}
+                    disabled={!vehicle?.available || (isBelow4500 && !selectedTier)}
                     className="flex-1 sm:flex-none rounded-full bg-adventure-orange hover:bg-adventure-orange/90 disabled:opacity-50"
                   >
-                    {vehicle?.available ? 'Book Now' : 'Unavailable'}
+                    {vehicle?.available ? (isBelow4500 && !selectedTier ? 'Select Rate' : 'Book Now') : 'Unavailable'}
                   </Button>
                 </div>
               </div>
