@@ -1,0 +1,80 @@
+# Phase 3: Heavy Load — ramp from 10 to 50 users/sec, sustain 50/sec for 30 seconds
+# Stress test to find breaking points
+config:
+  target: "https://silver-figolla-7e6aea.netlify.app"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp up 10→50 users/sec"
+    - duration: 30
+      arrivalRate: 50
+      name: "Sustain 50 users/sec"
+    - duration: 10
+      arrivalRate: 50
+      rampTo: 5
+      name: "Ramp down 50→5 users/sec"
+  defaults:
+    headers:
+      Accept: "application/json"
+
+scenarios:
+  - name: "Homepage"
+    weight: 3
+    flow:
+      - get:
+          url: "/"
+
+  - name: "Get all vehicles"
+    weight: 4
+    flow:
+      - get:
+          url: "/api/vehicles"
+
+  - name: "Get all adventures"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/adventures"
+
+  - name: "System health check"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/system/health"
+
+  - name: "M-Pesa config status"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/mpesa/status"
+
+  - name: "Get all bookings"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/bookings"
+
+  - name: "Get adventure bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/adventure-bookings"
+
+  - name: "Get PSV bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/psv-bookings"
+
+  - name: "Booking analytics"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/bookings/analytics"
+
+  - name: "M-Pesa test connection"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/mpesa/test-connection"

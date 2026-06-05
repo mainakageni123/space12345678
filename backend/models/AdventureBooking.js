@@ -27,6 +27,18 @@ const AdventureBookingSchema = new mongoose.Schema({
   rejectedBy: { type: String }, // Admin who rejected
   rejectedAt: { type: Date }, // When it was rejected
   rejectionReason: { type: String }, // Why it was rejected
+  
+  // Privacy Policy consent tracking
+  consentGiven: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  consentTimestamp: {
+    type: Date,
+    default: Date.now
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -137,8 +137,9 @@ const Footer = () => {
                 <span className="text-xs sm:text-sm">24/7 Support</span>
               </div>
             </div>
-            <div className="text-xs sm:text-sm text-cosmic-silver text-center sm:text-right">
-              © {new Date().getFullYear()} SpaceBorne Premium Mobility. All rights reserved.
+            <div className="text-xs sm:text-sm text-cosmic-silver text-center sm:text-right flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-end">
+              <span>© {new Date().getFullYear()} SpaceBorne Premium Mobility. All rights reserved.</span>
+              <a href="/privacy-policy" className="hover:text-white transition-colors duration-300 underline">Privacy Policy</a>
             </div>
           </div>
         </div>

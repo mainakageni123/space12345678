@@ -39,6 +39,17 @@ const BookingSchema = new mongoose.Schema({
   amountPaid: { type: Number },
   paidAt: { type: Date },
 
+  // Privacy Policy consent tracking
+  consentGiven: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  consentTimestamp: {
+    type: Date,
+    default: Date.now
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 

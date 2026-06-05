@@ -4,6 +4,7 @@ const AdventureBooking = require('../models/AdventureBooking');
 const Adventure = require('../models/Adventure');
 const Message = require('../models/Message');
 const { notifyNewAdventureBooking } = require('../services/whatsapp');
+const authMiddleware = require('../middleware/auth');
 
 router.use((req, res, next) => {
     console.log(`Adventure Bookings Route: ${req.method} ${req.originalUrl}`);
@@ -15,13 +16,21 @@ router.post('/', async (req, res) => {
     try {
         console.log('Received adventure booking request:', JSON.stringify(req.body, null, 2));
         
-        const { firstName, lastName, phoneNumber, email, adventureId, numberOfParticipants } = req.body;
+        const { firstName, lastName, phoneNumber, email, adventureId, numberOfParticipants, consentGiven } = req.body;
 
         // Validate required fields
         if (!firstName || !lastName || !phoneNumber || !email) {
             return res.status(400).json({
                 success: false,
                 error: 'Please fill in all required fields (name, phone, email)'
+            });
+        }
+
+        // Validate explicit Privacy Policy consent (Kenya DPA 2019 compliance)
+        if (!consentGiven && consentGiven !== 'true' && consentGiven !== true) {
+            return res.status(400).json({
+                success: false,
+                error: 'You must consent to the Privacy Policy to place a booking'
             });
         }
 
@@ -62,6 +71,8 @@ router.post('/', async (req, res) => {
             lastName,
             phoneNumber,
             email,
+            consentGiven: true,
+            consentTimestamp: new Date(),
             status: 'pending',
             ...(adventureId && { adventureId }),
             ...(resolvedTitle && { adventureTitle: resolvedTitle }),
@@ -117,7 +128,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all adventure bookings
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const bookings = await AdventureBooking.find().sort({ createdAt: -1 });
         res.json(bookings);
@@ -131,7 +142,7 @@ router.get('/', async (req, res) => {
 });
 
 // Approve an adventure booking
-router.patch('/:id/approve', async (req, res) => {
+router.patch('/:id/approve', authMiddleware, async (req, res) => {
     try {
         console.log('Approve adventure booking request received:', req.params.id);
         
@@ -209,7 +220,7 @@ router.patch('/:id/approve', async (req, res) => {
 });
 
 // Reject an adventure booking
-router.patch('/:id/reject', async (req, res) => {
+router.patch('/:id/reject', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { rejectedBy, rejectionReason } = req.body;
@@ -265,7 +276,7 @@ router.patch('/:id/reject', async (req, res) => {
 });
 
 // Delete an adventure booking
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         

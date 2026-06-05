@@ -49,6 +49,7 @@ const InstantBookingFlow = () => {
   
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -65,6 +66,12 @@ const InstantBookingFlow = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!consentAccepted) {
+      alert("You must agree to the Privacy Policy to complete your reservation.");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -90,6 +97,7 @@ const InstantBookingFlow = () => {
         lastName: form.lastName.trim(),
         phoneNumber: form.phoneNumber.trim(),
         email: form.email.trim(),
+        consentGiven: true,
         status: 'pending'
       };
 
@@ -428,6 +436,25 @@ const InstantBookingFlow = () => {
                       </ul>
                     </div>
                   </div>
+                </div>
+
+                {/* Consent Checkbox */}
+                <div className="flex items-start gap-2.5 my-3 text-left">
+                  <input
+                    type="checkbox"
+                    id="privacy-consent"
+                    checked={consentAccepted}
+                    onChange={(e) => setConsentAccepted(e.target.checked)}
+                    required
+                    className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="privacy-consent" className="text-xs text-gray-600 select-none cursor-pointer">
+                    I agree to the SpaceBorne{' '}
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-semibold">
+                      Privacy Policy
+                    </a>{' '}
+                    and consent to my contact details being used for booking processing.
+                  </label>
                 </div>
 
                 {/* Submit Button */}

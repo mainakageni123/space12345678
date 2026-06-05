@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
+const authMiddleware = require('../middleware/auth');
 const {
   initiateStkPush,
   queryStkStatus,
@@ -16,7 +17,7 @@ const {
 } = require('../services/mpesa');
 const { startBookingPayment, handleMpesaCallback } = require('../services/bookingWorkflow');
 
-router.get('/status', (req, res) => {
+router.get('/status', authMiddleware, (req, res) => {
   logKcbConfig();
   const diagnostics = getKcbDiagnostics();
   res.json({
@@ -32,7 +33,7 @@ router.get('/status', (req, res) => {
   });
 });
 
-router.get('/test-connection', async (req, res) => {
+router.get('/test-connection', authMiddleware, async (req, res) => {
   try {
     if (!isMpesaConfigured()) {
       return res.status(503).json({ success: false, error: 'KCB not fully configured' });

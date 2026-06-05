@@ -65,9 +65,22 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Clickjacking prevention
     X-Frame-Options = "DENY"
+    # MIME sniffing prevention
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer-when-downgrade"
+    # Referrer policy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Force HTTPS for 1 year; include subdomains
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Restrict access to sensitive browser features
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    # Content Security Policy — tightened for Kenya DPA compliance
+    # self           : HTML, CSS, JS from same origin
+    # fonts.gstatic / fonts.googleapis : Google Fonts
+    # *.netlify.app  : Netlify Function API calls (same origin in prod — kept for previews)
+    # unsafe-inline  : needed for inline styles used by React/Vite; remove if using nonces
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.netlify.app https://*.mongodb.net https://api.safaricom.co.ke https://uat.buni.kcbgroup.com https://api.buni.kcbgroup.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
 
 # Environment context-specific settings (set secrets in Netlify dashboard only)
 [context.deploy-preview.environment]

@@ -271,6 +271,16 @@ const connectDB = async () => {
         });
         console.log('✅ MongoDB Connected Successfully');
 
+        // Run data retention cleanup job (Kenya DPA 2019 compliance) on startup
+        try {
+            const { cleanOldData } = require('./jobs/cleanup');
+            cleanOldData();
+            // Run every 24 hours
+            setInterval(cleanOldData, 24 * 60 * 60 * 1000);
+        } catch (e) {
+            console.warn('Failed to initialize data retention cleanup job:', e.message);
+        }
+
         // Start server after successful DB connection
         const server = app.listen(PORT, '0.0.0.0', () => {
             const interfaces = require('os').networkInterfaces();

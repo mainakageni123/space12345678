@@ -49,6 +49,7 @@ const CorporateTransportModal = ({ isOpen, onClose }) => {
     companyName: '',
     additionalNotes: ''
   });
+  const [consentGiven, setConsentGiven] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -57,13 +58,17 @@ const CorporateTransportModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!consentGiven) {
+      setError('You must agree to the data privacy terms before submitting.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/psv-bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceType: 'corporate', ...form })
+        body: JSON.stringify({ serviceType: 'corporate', ...form, consentGiven })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -177,6 +182,25 @@ const CorporateTransportModal = ({ isOpen, onClose }) => {
             rows={3}
             className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[80px]"
           />
+        </div>
+
+        {/* Kenya DPA 2019 consent */}
+        <div className="flex items-start gap-3 rounded-lg border border-gray-700 bg-gray-800/60 p-3">
+          <input
+            id="corporate-consent"
+            type="checkbox"
+            checked={consentGiven}
+            onChange={(e) => setConsentGiven(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-cyan-500 cursor-pointer flex-shrink-0"
+          />
+          <label htmlFor="corporate-consent" className="text-xs text-gray-400 leading-relaxed cursor-pointer">
+            I consent to SpaceBorne collecting and processing my personal data (name, phone, email,
+            route details) to arrange corporate transport services, in accordance with the{' '}
+            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline hover:text-cyan-300">
+              Privacy Policy
+            </a>{' '}
+            and the Kenya Data Protection Act 2019.
+          </label>
         </div>
       </form>
     </PsvModalShell>

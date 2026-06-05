@@ -259,7 +259,7 @@ const initiateStkPush = async ({
   };
 
   console.log('[KCB] STK push request:', {
-    phone: formattedPhone,
+    phone: formattedPhone.slice(0, 6) + '****' + formattedPhone.slice(-2),
     amount: payload.amount,
     invoiceNumber,
     stkUrl: getStkPushUrl()

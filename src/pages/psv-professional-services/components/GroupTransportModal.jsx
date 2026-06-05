@@ -51,18 +51,25 @@ const GroupTransportModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   const set = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!consentAccepted) {
+      setError("You must agree to the Privacy Policy to submit a request.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/psv-bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceType: 'group', ...form })
+        body: JSON.stringify({ serviceType: 'group', consentGiven: true, ...form })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -213,6 +220,25 @@ const GroupTransportModal = ({ isOpen, onClose }) => {
             rows={3}
             className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[80px]"
           />
+        </div>
+
+        {/* Consent Checkbox */}
+        <div className="flex items-start gap-2.5 my-3 text-left">
+          <input
+            type="checkbox"
+            id="psv-group-consent"
+            checked={consentAccepted}
+            onChange={(e) => setConsentAccepted(e.target.checked)}
+            required
+            className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+          />
+          <label htmlFor="psv-group-consent" className="text-xs text-gray-400 select-none cursor-pointer">
+            I agree to the SpaceBorne{' '}
+            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-semibold">
+              Privacy Policy
+            </a>{' '}
+            and consent to my contact details being used for booking processing.
+          </label>
         </div>
       </form>
     </PsvModalShell>

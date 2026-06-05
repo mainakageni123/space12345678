@@ -41,6 +41,18 @@ const PsvBookingSchema = new mongoose.Schema({
   rejectedBy: { type: String },
   rejectedAt: { type: Date },
   rejectionReason: { type: String },
+
+  // Privacy Policy consent tracking
+  consentGiven: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  consentTimestamp: {
+    type: Date,
+    default: Date.now
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 

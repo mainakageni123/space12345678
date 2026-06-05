@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
     try {
         console.log('Received booking request:', JSON.stringify(req.body, null, 2));
         
-        const { firstName, lastName, phoneNumber, email } = req.body;
+        const { firstName, lastName, phoneNumber, email, consentGiven } = req.body;
 
         // Validate duration for vehicles priced below KES 6,000
         const vehiclePrice = Number(req.body.vehiclePrice || 0);
@@ -34,7 +34,8 @@ router.post('/', async (req, res) => {
             firstName: !!firstName,
             lastName: !!lastName,
             phoneNumber: !!phoneNumber,
-            email: !!email
+            email: !!email,
+            consentGiven: !!consentGiven
         });
 
         // Validate required personal information
@@ -51,12 +52,41 @@ router.post('/', async (req, res) => {
             });
         }
 
+        // Validate explicit Privacy Policy consent (Kenya DPA 2019 compliance)
+        if (!consentGiven && consentGiven !== 'true' && consentGiven !== true) {
+            return res.status(400).json({
+                success: false,
+                error: 'You must consent to the Privacy Policy to place a booking'
+            });
+        }
+
+        // Check for duplicate bookings (same email, same vehicle, active status, last 10 mins)
+        if (req.body.vehicleId) {
+            const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+            const existingDuplicate = await Booking.findOne({
+                email: email.trim(),
+                vehicleId: req.body.vehicleId,
+                status: { $in: ['pending', 'approved', 'confirmed'] },
+                createdAt: { $gte: tenMinutesAgo }
+            });
+
+            if (existingDuplicate) {
+                console.log('Duplicate booking detected:', { email, vehicleId: req.body.vehicleId });
+                return res.status(409).json({
+                    success: false,
+                    error: 'You have already submitted a booking request for this vehicle. Please wait a few minutes.'
+                });
+            }
+        }
+
         // Create booking with only required fields
         const booking = new Booking({
             firstName,
             lastName,
             phoneNumber,
             email,
+            consentGiven: true,
+            consentTimestamp: new Date(),
             status: 'pending', // Changed from 'new' to 'pending' for approval workflow
             // Add vehicle info if provided
             ...(req.body.vehicleId && { vehicleId: req.body.vehicleId }),
@@ -108,7 +138,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const bookings = await Booking.find().sort({ createdAt: -1 });
         res.json(bookings);
@@ -122,7 +152,7 @@ router.get('/', async (req, res) => {
 });
 
 // Analytics endpoint - MUST be before /:id routes
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', authMiddleware, async (req, res) => {
     try {
         const { range = '7days' } = req.query;
         
@@ -341,7 +371,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update booking (for payment status, etc.)
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
@@ -386,7 +416,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // Approve a booking (triggers customer WhatsApp + M-Pesa STK push)
-router.patch('/:id/approve', async (req, res) => {
+router.patch('/:id/approve', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { approvedBy } = req.body;
@@ -418,7 +448,7 @@ router.patch('/:id/approve', async (req, res) => {
 });
 
 // Reject a booking
-router.patch('/:id/reject', async (req, res) => {
+router.patch('/:id/reject', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { rejectedBy, rejectionReason } = req.body;

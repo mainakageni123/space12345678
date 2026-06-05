@@ -4,6 +4,7 @@ const PsvBooking = require('../models/PsvBooking');
 const Message = require('../models/Message');
 const { notifyNewPsvBooking } = require('../services/whatsapp');
 const { dbErrorResponse } = require('../utils/dbErrors');
+const authMiddleware = require('../middleware/auth');
 
 router.use((req, res, next) => {
   console.log(`PSV Bookings Route: ${req.method} ${req.originalUrl}`);
@@ -38,7 +39,7 @@ const validateCorporateBooking = (body) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { serviceType } = req.body;
+    const { serviceType, consentGiven } = req.body;
     if (!['group', 'corporate'].includes(serviceType)) {
       return res.status(400).json({ success: false, error: 'Invalid service type' });
     }
@@ -49,6 +50,14 @@ router.post('/', async (req, res) => {
 
     if (validationError) {
       return res.status(400).json({ success: false, error: validationError });
+    }
+
+    // Validate explicit Privacy Policy consent (Kenya DPA 2019 compliance)
+    if (!consentGiven && consentGiven !== 'true' && consentGiven !== true) {
+      return res.status(400).json({
+        success: false,
+        error: 'You must consent to the Privacy Policy to place a booking'
+      });
     }
 
     const serviceLabel = serviceType === 'group' ? 'Group Transport' : 'Corporate & Personal';
@@ -73,6 +82,8 @@ router.post('/', async (req, res) => {
       departureTime: req.body.departureTime || '',
       companyName: req.body.companyName?.trim() || '',
       additionalNotes: req.body.additionalNotes?.trim() || '',
+      consentGiven: true,
+      consentTimestamp: new Date(),
       status: 'pending'
     });
 
@@ -109,7 +120,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const bookings = await PsvBooking.find().sort({ createdAt: -1 });
     res.json(bookings);
@@ -119,7 +130,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.patch('/:id/approve', async (req, res) => {
+router.patch('/:id/approve', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
@@ -151,7 +162,7 @@ router.patch('/:id/approve', async (req, res) => {
   }
 });
 
-router.patch('/:id/reject', async (req, res) => {
+router.patch('/:id/reject', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id?.match(/^[0-9a-fA-F]{24}$/)) {
@@ -180,7 +191,7 @@ router.patch('/:id/reject', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     if (!id?.match(/^[0-9a-fA-F]{24}$/)) {

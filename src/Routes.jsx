@@ -5,6 +5,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import SwipeNavigation from "./components/SwipeNavigation";
+import CookieBanner from "./components/CookieBanner";
 
 const Homepage = React.lazy(() => import('./pages/homepage'));
 const FleetDiscovery = React.lazy(() => import('./pages/fleet-discovery'));
@@ -21,6 +22,7 @@ const AddVehicle = React.lazy(() => import('./pages/admin-command-center/compone
 const EditVehicle = React.lazy(() => import('./pages/admin-command-center/components/EditVehicle'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const ExamplePage = React.lazy(() => import('./components/responsive/ExamplePage'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 
 const Routes = () => {
   return (
@@ -28,6 +30,7 @@ const Routes = () => {
       <ErrorBoundary>
         <ScrollToTop />
         <SwipeNavigation />
+        <CookieBanner />
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-screen bg-white">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-adventure-orange"></div>
@@ -46,6 +49,7 @@ const Routes = () => {
             <Route path="/mpesa-pay" element={<MpesaPay />} />
             <Route path="/customer-registration" element={<CustomerRegistration />} />
             <Route path="/responsive-demo" element={<ExamplePage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             
             {/* Admin Routes */}
             <Route path="/admin-login" element={<AdminLogin />} />

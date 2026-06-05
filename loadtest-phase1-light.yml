@@ -1,0 +1,75 @@
+# Phase 1: Light Load — 5 users/sec for 20 seconds (100 total requests)
+# Tests all public GET endpoints to find baseline response times
+config:
+  target: "https://silver-figolla-7e6aea.netlify.app"
+  phases:
+    - duration: 20
+      arrivalRate: 5
+      name: "Light load - 5 users/sec"
+  defaults:
+    headers:
+      Accept: "application/json"
+
+scenarios:
+  # ── Frontend pages ──
+  - name: "Homepage"
+    weight: 3
+    flow:
+      - get:
+          url: "/"
+
+  # ── Vehicle APIs ──
+  - name: "Get all vehicles"
+    weight: 3
+    flow:
+      - get:
+          url: "/api/vehicles"
+
+  # ── Adventures ──
+  - name: "Get all adventures"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/adventures"
+
+  # ── System health ──
+  - name: "System health check"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/system/health"
+
+  # ── M-Pesa status ──
+  - name: "M-Pesa config status"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/mpesa/status"
+
+  # ── Bookings list ──
+  - name: "Get all bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/bookings"
+
+  # ── Adventure bookings ──
+  - name: "Get adventure bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/adventure-bookings"
+
+  # ── PSV bookings ──
+  - name: "Get PSV bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/psv-bookings"
+
+  # ── Booking analytics ──
+  - name: "Booking analytics"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/bookings/analytics"

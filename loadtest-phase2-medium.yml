@@ -1,0 +1,70 @@
+# Phase 2: Medium Load — ramp from 5 to 20 users/sec over 30 seconds, sustain 20/sec for 30 seconds
+# Tests all public GET endpoints under increasing pressure
+config:
+  target: "https://silver-figolla-7e6aea.netlify.app"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp up 5→20 users/sec"
+    - duration: 30
+      arrivalRate: 20
+      name: "Sustain 20 users/sec"
+  defaults:
+    headers:
+      Accept: "application/json"
+
+scenarios:
+  - name: "Homepage"
+    weight: 3
+    flow:
+      - get:
+          url: "/"
+
+  - name: "Get all vehicles"
+    weight: 3
+    flow:
+      - get:
+          url: "/api/vehicles"
+
+  - name: "Get all adventures"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/adventures"
+
+  - name: "System health check"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/system/health"
+
+  - name: "M-Pesa config status"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/mpesa/status"
+
+  - name: "Get all bookings"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/bookings"
+
+  - name: "Get adventure bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/adventure-bookings"
+
+  - name: "Get PSV bookings"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/psv-bookings"
+
+  - name: "Booking analytics"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/bookings/analytics"
