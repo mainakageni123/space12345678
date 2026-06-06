@@ -57,9 +57,24 @@ app.use(mongoSanitize());
 // Compression middleware
 app.use(compression());
 
-// Configure CORS middleware - more permissive for development
+// Configure CORS middleware — allows local dev + Vercel deployments + custom domain
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    /\.vercel\.app$/,                              // all Vercel preview & prod URLs
+    process.env.FRONTEND_URL,                      // custom domain (set in Railway env vars)
+].filter(Boolean);
+
 app.use(cors({
-    origin: '*',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Railway health checks)
+        if (!origin) return callback(null, true);
+        const allowed = allowedOrigins.some(o =>
+            o instanceof RegExp ? o.test(origin) : o === origin
+        );
+        if (allowed) return callback(null, true);
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'x-auth-token'],
     exposedHeaders: ['Authorization'],

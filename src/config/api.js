@@ -1,5 +1,4 @@
 // Detect local/dev environment at runtime based on hostname
-// This is more reliable than import.meta.env.DEV for Netlify deployments
 const _host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 const _isLocal =
   _host === 'localhost' ||
@@ -8,8 +7,15 @@ const _isLocal =
   /^10\./.test(_host) ||
   /^172\.(1[6-9]|2[0-9]|3[01])\./.test(_host);
 
-export const API_BASE_URL = _isLocal ? `http://${_host}:3001/api` : '/api';
-export const UPLOADS_URL = _isLocal ? `http://${_host}:3001` : '';
+// In production (Vercel), use the Railway backend URL via VITE_API_URL env variable.
+// In development, use localhost:3001.
+const RAILWAY_URL = import.meta.env.VITE_API_URL || '';
+
+export const API_BASE_URL = _isLocal
+  ? `http://${_host}:3001/api`
+  : `${RAILWAY_URL}/api`;
+
+export const UPLOADS_URL = _isLocal ? `http://${_host}:3001` : RAILWAY_URL;
 
 export const defaultFetchOptions = {
   mode: 'cors',
