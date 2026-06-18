@@ -130,7 +130,7 @@ const PrivacyPolicy = () => {
                   To exercise any of your data rights or report a privacy concern, please contact our Data Protection Officer:
                 </p>
                 <p className="text-stellar-gold text-sm sm:text-base font-medium mt-1">
-                  Email: <a href="mailto:privacy@spaceborne.co.ke" className="underline">privacy@spaceborne.co.ke</a>
+                  Email: <a href="mailto:spaceborneltd@gmail.com" className="underline">spaceborneltd@gmail.com</a>
                 </p>
                 <p className="text-cosmic-silver/60 text-xs sm:text-sm mt-2">
                   SpaceBorne LTD, Machakos, Kenya
