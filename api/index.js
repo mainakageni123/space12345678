@@ -67,6 +67,8 @@ app.use(compression());
 
 // ── CORS — locked to your Vercel domain ─────────────────────────────────────
 const allowedOrigins = [
+    'https://spaceborneltd.com',
+    'https://www.spaceborneltd.com',
     'https://space12345678.vercel.app',
     /^https:\/\/space12345678-[a-z0-9]+-spaceborne-s-projects\.vercel\.app$/, // preview deploys
     'http://localhost:5173',
