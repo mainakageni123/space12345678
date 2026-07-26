@@ -51,6 +51,10 @@ router.get('/', async (req, res) => {
             return obj;
         });
         
+        // Set Cache-Control headers for Edge CDN caching
+        // s-maxage=60 caches it on the CDN for 60 seconds
+        // stale-while-revalidate=300 serves the stale cache instantly while fetching fresh data in the background
+        res.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         res.json(vehiclesWithUrls);
     } catch (error) {
         res.status(500).json({ message: error.message });

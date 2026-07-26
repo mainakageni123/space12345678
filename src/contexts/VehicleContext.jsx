@@ -20,7 +20,15 @@ const handleApiError = (error) => {
 const VehicleContext = createContext();
 
 export const VehicleProvider = ({ children }) => {
-  const [vehicles, setVehicles] = useState([]);
+  const [vehicles, setVehicles] = useState(() => {
+    try {
+      const cached = localStorage.getItem('spaceborne_vehicles');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      console.warn('Error reading vehicles from localStorage:', e);
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -80,6 +88,11 @@ export const VehicleProvider = ({ children }) => {
       const mappedVehicles = mapVehicles(data);
       console.log('Mapped vehicles:', mappedVehicles);
       setVehicles(mappedVehicles);
+      try {
+        localStorage.setItem('spaceborne_vehicles', JSON.stringify(mappedVehicles));
+      } catch (e) {
+        console.warn('Error saving vehicles to localStorage:', e);
+      }
       setError(null);
     } catch (err) {
       const errorMessage = err.message || 'Failed to fetch vehicles';

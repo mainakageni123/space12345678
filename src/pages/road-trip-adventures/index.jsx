@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import HeroSection from './components/HeroSection';
 import Footer from '../../components/Footer';
@@ -165,10 +166,18 @@ const RoadTripAdventures = () => {
   const hasActiveFilters = searchQuery || filters.tripType !== 'all' || filters.priceRange !== 'all';
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main>
-        <HeroSection />
+    <>
+      <Helmet>
+        <title>Curated Road Trip Adventures & Tours | SpaceBorne</title>
+        <meta name="description" content="Embark on extraordinary road trip adventures across Kenya. Handpicked tour packages, luxury transport, and professional guides." />
+        <meta name="keywords" content="road trips Kenya, tours and travel, Maasai Mara road trip, adventure tours, SpaceBorne travel" />
+        <meta property="og:title" content="SpaceBorne - Road Trip Adventures & Tours" />
+        <meta property="og:description" content="Transform your holiday with curated safari tours and custom road trips across East Africa." />
+      </Helmet>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main>
+          <HeroSection />
         
         <section id="available-adventures" className="bg-background pt-16">
           <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
@@ -364,6 +373,7 @@ const RoadTripAdventures = () => {
 
       <Footer />
     </div>
+    </>
   );
 };
 

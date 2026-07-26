@@ -9,7 +9,16 @@ const path = require('path');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
+// Tiered rate limiters (see middleware/rateLimit.js)
+const {
+    globalLimiter,
+    authLimiter,
+    paymentLimiter,
+    bookingLimiter,
+    adminLimiter,
+    publicReadLimiter,
+    webhookLimiter
+} = require('./middleware/rateLimit');
 const mongoSanitize = require('express-mongo-sanitize');
 
 // Load env
@@ -40,16 +49,9 @@ app.use(helmet({
     crossOriginOpenerPolicy: false
 }));
 
-// Rate limiting
-// Express Rate Limiter
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // increased limit for development
-    handler: (req, res) => {
-        res.status(429).json({ success: false, message: 'Too many requests from this IP, please try again later.' });
-    }
-});
-app.use('/api/', limiter);
+// ── Rate Limiting ──────────────────────────────────────────────────────────
+// Global fallback applied to ALL /api/* routes
+app.use('/api/', globalLimiter);
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
@@ -164,19 +166,34 @@ app.get('/images/vehicles/:id', async (req, res) => {
     }
 });
 
-// Register API routes
-app.use('/api/vehicles', routes.vehicles);
-app.use('/api/bookings', routes.bookings);
-app.use('/api/adventure-bookings', routes.adventureBookings);
-app.use('/api/admin', routes.admin);
-app.use('/api/admin/auth', routes.adminAuth);
-app.use('/api/system', routes.system);
+// ── Register API Routes (with per-route rate limiters) ──────────────────────
+
+// Public read-only routes — generous limit
+app.use('/api/vehicles',    publicReadLimiter, routes.vehicles);
+app.use('/api/adventures',  publicReadLimiter, routes.adventures);
+
+// Booking routes — moderate limit
+app.use('/api/bookings',          bookingLimiter, routes.bookings);
+app.use('/api/adventure-bookings', bookingLimiter, routes.adventureBookings);
+app.use('/api/psv-bookings',       bookingLimiter, routes.psvBookings);
+
+// Payment / M-Pesa — strict limit on initiation; loose limit on Safaricom callbacks
+app.use('/api/mpesa/callback', webhookLimiter);   // Safaricom callback (applied before mpesa router)
+app.use('/api/mpesa',          paymentLimiter, routes.mpesa);
+
+// Auth — strictest limit (brute-force protection)
+app.use('/api/admin/auth', authLimiter, routes.adminAuth);
+
+// Admin dashboard — moderate admin limit
+app.use('/api/admin/users', adminLimiter, routes.adminUsers);
+app.use('/api/admin',       adminLimiter, routes.admin);
+
+// Webhook — high ceiling for external providers
+app.use('/api/whatsapp', webhookLimiter, routes.whatsapp);
+
+// Utility routes
+app.use('/api/system',   routes.system);
 app.use('/api/messages', routes.messages);
-app.use('/api/admin/users', routes.adminUsers);
-app.use('/api/adventures', routes.adventures);
-app.use('/api/psv-bookings', routes.psvBookings);
-app.use('/api/mpesa', routes.mpesa);
-app.use('/api/whatsapp', routes.whatsapp);
 
 // Log registered routes
 console.log('Available API routes:', [

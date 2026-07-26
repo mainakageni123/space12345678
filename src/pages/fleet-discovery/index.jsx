@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
@@ -147,9 +148,17 @@ const FleetDiscovery = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="pt-16">
+    <>
+      <Helmet>
+        <title>Explore Our Fleet | Premium Vehicle Rentals | SpaceBorne</title>
+        <meta name="description" content="Discover premium, luxury, and adventure vehicles for hire at SpaceBorne. Compare cars, view clear pricing, and book your rental instantly." />
+        <meta name="keywords" content="car hire Kenya, vehicle rentals, luxury cars, hire SUV, SpaceBorne fleet" />
+        <meta property="og:title" content="SpaceBorne - Premium Vehicle Fleet" />
+        <meta property="og:description" content="Compare and rent premium vehicles instantly. Clear daily rates and high-quality cars." />
+      </Helmet>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-16">
         <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
           {/* New Header with Hamburger and Search */}
           <div className="flex items-center justify-between mb-6">
@@ -335,7 +344,8 @@ const FleetDiscovery = () => {
 
 
       </main>
-    </div>
+      </div>
+    </>
   );
 };
 
