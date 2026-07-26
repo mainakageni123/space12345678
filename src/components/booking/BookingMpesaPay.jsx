@@ -268,31 +268,8 @@ const BookingMpesaPay = ({
         <div className="space-y-2">
           <p className={`text-sm flex items-start gap-2 ${isDark ? 'text-red-400' : 'text-red-700'}`}>
             <Icon name="AlertCircle" size={16} className="flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
+            <span>Payment temporarily unavailable. Please try again shortly or contact support.</span>
           </p>
-          {diagnostics && (
-            <div className={`text-xs p-3 rounded-lg border font-mono space-y-1 ${
-              isDark ? 'bg-red-950/20 border-red-900/50 text-red-300' : 'bg-red-50/50 border-red-200 text-red-800'
-            }`}>
-              <div className="font-semibold uppercase tracking-wider mb-1 text-[10px] opacity-80">System Diagnostics</div>
-              <div>Mode: {diagnostics.mode}</div>
-              <div>Base URL: {diagnostics.baseUrl}</div>
-              {diagnostics.tokenUrl && <div>Token URL: {diagnostics.tokenUrl}</div>}
-              <div>Env Value: {diagnostics.envValue || 'NOT SET'}</div>
-              <div>Key preview: {diagnostics.consumerKeyPreview || 'N/A'} (len: {diagnostics.consumerKeyLength || 0})</div>
-              {diagnostics.consumerSecretPreview && (
-                <div>Secret preview: {diagnostics.consumerSecretPreview} (len: {diagnostics.consumerSecretLength || 0})</div>
-              )}
-              {diagnostics.lastKcbError && (
-                <div className="text-[10px] bg-red-100 dark:bg-red-900/40 p-1.5 rounded mt-1 overflow-x-auto">
-                  Raw Response: {JSON.stringify(diagnostics.lastKcbError.data || diagnostics.lastKcbError)}
-                </div>
-              )}
-              {diagnostics.keyHadWhitespace && <div className="text-amber-500 font-bold">⚠️ Warning: Consumer Key has leading/trailing spaces!</div>}
-              {diagnostics.secretHadWhitespace && <div className="text-amber-500 font-bold">⚠️ Warning: Consumer Secret has leading/trailing spaces!</div>}
-              {diagnostics.hint && <div className="mt-1 italic opacity-90">Hint: {diagnostics.hint}</div>}
-            </div>
-          )}
         </div>
       )}
 

@@ -19,7 +19,8 @@ const { startBookingPayment, handleMpesaCallback } = require('../services/bookin
 
 router.get('/status', authMiddleware, (req, res) => {
   logKcbConfig();
-  const diagnostics = getKcbDiagnostics();
+  // Diagnostics logged server-side only (visible in Vercel Function logs)
+  console.log('[KCB] Status check diagnostics:', JSON.stringify(getKcbDiagnostics()));
   res.json({
     success: true,
     configured: isMpesaConfigured().configured,
@@ -28,8 +29,7 @@ router.get('/status', authMiddleware, (req, res) => {
     consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
     shortcode: process.env.KCB_BUNI_ORG_SHORTCODE ? 'SET' : 'MISSING',
     accountNumber: process.env.KCB_BUNI_ACCOUNT_NUMBER ? 'SET' : 'MISSING',
-    callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING',
-    ...diagnostics
+    callbackUrl: process.env.KCB_BUNI_CALLBACK_URL ? 'SET' : 'MISSING'
   });
 });
 
@@ -41,11 +41,11 @@ router.get('/test-connection', authMiddleware, async (req, res) => {
     const result = await testKcbConnection();
     res.json({ success: true, message: 'KCB token obtained', ...result });
   } catch (error) {
+    // Log full diagnostics server-side only
+    console.error('[KCB] Test connection failed:', error.message, JSON.stringify(getKcbDiagnostics()));
     res.status(500).json({
       success: false,
-      error: formatKcbError(error),
-      message: error.message,
-      diagnostics: getKcbDiagnostics()
+      error: 'Payment service temporarily unavailable. Please try again shortly.'
     });
   }
 });
@@ -226,12 +226,11 @@ router.post('/pay-booking/:bookingId', async (req, res) => {
       paymentId: result.payment._id
     });
   } catch (error) {
-    console.error('Pay booking error:', error.message);
+    // Full diagnostics go to server logs only (Vercel Function logs)
+    console.error('[KCB] Pay booking error:', error.message, JSON.stringify(getKcbDiagnostics()));
     res.status(500).json({
       success: false,
-      error: 'Failed to initiate booking payment',
-      message: error.message,
-      diagnostics: getKcbDiagnostics()
+      error: 'Payment temporarily unavailable. Please try again shortly.'
     });
   }
 });
