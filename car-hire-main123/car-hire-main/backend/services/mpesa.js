@@ -23,23 +23,22 @@ const getKcbBaseUrl = () => {
   return useKcbLive() ? 'https://api.buni.kcbgroup.com' : 'https://uat.buni.kcbgroup.com';
 };
 
+// Returns the OAuth2 token URL — NEVER appends grant_type to the URL;
+// it always goes in the POST body (OAuth2 spec / KCB Buni requirement).
 const getTokenUrl = () => {
-  if (useKcbLive() && process.env.KCB_BUNI_TOKEN_URL) {
-    const url = process.env.KCB_BUNI_TOKEN_URL;
-    // KCB Buni production requires grant_type in URL query string
-    if (!url.includes('grant_type=')) {
-      return url + (url.includes('?') ? '&' : '?') + 'grant_type=client_credentials';
-    }
-    return url;
+  // 1. Explicit override via env var (no modification)
+  if (process.env.KCB_BUNI_TOKEN_URL) {
+    return process.env.KCB_BUNI_TOKEN_URL.split('?')[0]; // strip any stale query params
   }
+  // 2. UAT-specific override
   if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
-    return process.env.KCB_BUNI_UAT_TOKEN_URL;
+    return process.env.KCB_BUNI_UAT_TOKEN_URL.split('?')[0];
   }
-  // Default production: Buni portal shows api.buni.kcbgroup.com/token
-  if (useKcbLive()) {
-    return 'https://api.buni.kcbgroup.com/token?grant_type=client_credentials';
-  }
-  return 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials';
+  // 3. Correct defaults: accounts.buni.kcbgroup.com (OAuth2 endpoint)
+  //    api.buni.kcbgroup.com is for the STK push, NOT the token.
+  return useKcbLive()
+    ? 'https://accounts.buni.kcbgroup.com/oauth2/token'
+    : 'https://accounts.buni.kcbgroup.com/oauth2/token'; // same host for UAT tokens too
 };
 
 const getStkPushUrl = () => {
@@ -175,19 +174,18 @@ const getAccessToken = async () => {
 
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
   const tokenUrl = getTokenUrl();
-  const hasGrantTypeInUrl = tokenUrl.includes('grant_type=');
 
   console.log('[KCB] Token request:', {
-    url: tokenUrl.split('?')[0],
-    grantTypeInUrl: hasGrantTypeInUrl,
+    url: tokenUrl,
     keyPreview: KCB_CONSUMER_KEY.slice(0, 6) + '...',
     mode: useKcbLive() ? 'PRODUCTION' : 'UAT'
   });
 
   try {
+    // OAuth2 client_credentials: grant_type ALWAYS goes in the POST body, not the URL
     const response = await axiosKcb.post(
       tokenUrl,
-      hasGrantTypeInUrl ? undefined : 'grant_type=client_credentials',
+      'grant_type=client_credentials',
       {
         headers: {
           Authorization: `Basic ${auth}`,
