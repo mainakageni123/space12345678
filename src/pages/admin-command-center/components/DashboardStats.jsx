@@ -3,6 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../../config/api';
 import Icon from '../../../components/AppIcon';
 
+const getAdminToken = () =>
+  sessionStorage.getItem('admin_token') ||
+  localStorage.getItem('adminToken') ||
+  localStorage.getItem('admin_token') ||
+  '';
+
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${getAdminToken()}`
+});
+
+const safeArray = (val) => (Array.isArray(val) ? val : []);
+
 const DashboardStats = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -20,51 +33,52 @@ const DashboardStats = () => {
 
   const fetchStats = async () => {
     try {
-      // Fetch vehicles
+      const headers = authHeaders();
+
+      // Fetch vehicles (public route)
       const vehiclesRes = await fetch(`${API_BASE_URL}/vehicles`);
-      const vehicles = await vehiclesRes.json();
+      const vehiclesData = await vehiclesRes.json();
+      const vehicles = safeArray(vehiclesData);
 
-      // Fetch bookings
-      const bookingsRes = await fetch(`${API_BASE_URL}/bookings`);
-      const bookings = await bookingsRes.json();
+      // Fetch bookings (protected route — needs auth token)
+      const bookingsRes = await fetch(`${API_BASE_URL}/bookings`, { headers });
+      const bookingsData = await bookingsRes.json();
+      const bookings = safeArray(bookingsData);
 
-      // Fetch adventure bookings
+      // Fetch adventure bookings (protected route)
       let adventureBookings = [];
       try {
-        const adventureBookingsRes = await fetch(`${API_BASE_URL}/adventure-bookings`);
-        adventureBookings = await adventureBookingsRes.json();
+        const adventureBookingsRes = await fetch(`${API_BASE_URL}/adventure-bookings`, { headers });
+        const adventureBookingsData = await adventureBookingsRes.json();
+        adventureBookings = safeArray(adventureBookingsData);
       } catch (err) {
         console.warn('Adventure bookings not available:', err);
       }
 
+      // Fetch PSV bookings (protected route)
       let psvBookings = [];
       try {
-        const psvRes = await fetch(`${API_BASE_URL}/psv-bookings`);
-        psvBookings = await psvRes.json();
+        const psvRes = await fetch(`${API_BASE_URL}/psv-bookings`, { headers });
+        const psvData = await psvRes.json();
+        psvBookings = safeArray(psvData);
       } catch (err) {
         console.warn('PSV bookings not available:', err);
       }
 
-      // Fetch adventures
+      // Fetch adventures (public route)
       const adventuresRes = await fetch(`${API_BASE_URL}/adventures`);
       const adventures = await adventuresRes.json();
 
-      // Calculate stats - Active bookings are approved bookings (vehicle + adventure)
-      const approvedVehicleBookings = bookings.filter(booking => 
-        booking.status === 'approved'
-      ).length;
-      const approvedAdventureBookings = adventureBookings.filter(booking => 
-        booking.status === 'approved'
-      ).length;
-      const approvedPsvBookings = (Array.isArray(psvBookings) ? psvBookings : []).filter(booking =>
-        booking.status === 'approved'
-      ).length;
-      const activeBookings = approvedVehicleBookings + approvedAdventureBookings + approvedPsvBookings;
+      // Calculate stats
+      const activeBookings =
+        safeArray(bookings).filter(b => b.status === 'approved').length +
+        safeArray(adventureBookings).filter(b => b.status === 'approved').length +
+        safeArray(psvBookings).filter(b => b.status === 'approved').length;
 
       setStats({
-        totalVehicles: Array.isArray(vehicles) ? vehicles.length : 0,
-        totalBookings: (Array.isArray(bookings) ? bookings.length : 0) + (Array.isArray(adventureBookings) ? adventureBookings.length : 0) + (Array.isArray(psvBookings) ? psvBookings.length : 0),
-        totalAdventures: Array.isArray(adventures?.adventures) ? adventures.adventures.length : 0,
+        totalVehicles: vehicles.length,
+        totalBookings: bookings.length + adventureBookings.length + psvBookings.length,
+        totalAdventures: safeArray(adventures?.adventures).length,
         activeBookings
       });
     } catch (error) {

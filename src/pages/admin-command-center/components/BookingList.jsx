@@ -6,6 +6,19 @@ import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const getAdminToken = () =>
+  sessionStorage.getItem('admin_token') ||
+  localStorage.getItem('adminToken') ||
+  localStorage.getItem('admin_token') ||
+  '';
+
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${getAdminToken()}`
+});
+
+const safeArray = (val) => (Array.isArray(val) ? val : []);
+
 const BookingList = () => {
   const [bookings, setBookings] = useState([]);
   const [adventureBookings, setAdventureBookings] = useState([]);
@@ -43,12 +56,10 @@ const BookingList = () => {
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/bookings`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch vehicle bookings');
-      }
+      const response = await fetch(`${API_BASE_URL}/bookings`, { headers: authHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch vehicle bookings');
       const data = await response.json();
-      setBookings(data);
+      setBookings(safeArray(data));
     } catch (err) {
       setError(err.message);
     }
@@ -56,12 +67,10 @@ const BookingList = () => {
 
   const fetchAdventureBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/adventure-bookings`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch adventure bookings');
-      }
+      const response = await fetch(`${API_BASE_URL}/adventure-bookings`, { headers: authHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch adventure bookings');
       const data = await response.json();
-      setAdventureBookings(data);
+      setAdventureBookings(safeArray(data));
     } catch (err) {
       console.error('Error fetching adventure bookings:', err);
     }
@@ -69,21 +78,20 @@ const BookingList = () => {
 
   const fetchPsvBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/psv-bookings`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch PSV bookings');
-      }
+      const response = await fetch(`${API_BASE_URL}/psv-bookings`, { headers: authHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch PSV bookings');
       const data = await response.json();
-      setPsvBookings(Array.isArray(data) ? data : []);
+      setPsvBookings(safeArray(data));
     } catch (err) {
       console.error('Error fetching PSV bookings:', err);
     }
   };
 
-  const currentBookingsList =
+  const currentBookingsList = safeArray(
     bookingType === 'vehicle' ? bookings
     : bookingType === 'adventure' ? adventureBookings
-    : psvBookings;
+    : psvBookings
+  );
 
   // Filter bookings based on active tab
   const filteredBookings = currentBookingsList.filter(booking => {
