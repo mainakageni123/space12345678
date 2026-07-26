@@ -36,7 +36,7 @@ const findBookingByIdOrSuffix = async (idPart) => {
 const shortBookingId = (id) => String(id).slice(-8).toUpperCase();
 
 const startBookingPayment = async (booking) => {
-  if (!isMpesaConfigured()) {
+  if (!isMpesaConfigured().configured) {
     console.warn('M-Pesa not configured — skipping STK push');
     return { stkSent: false, reason: 'mpesa_not_configured' };
   }

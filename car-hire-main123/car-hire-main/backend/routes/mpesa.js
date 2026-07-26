@@ -22,7 +22,7 @@ router.get('/status', authMiddleware, (req, res) => {
   const diagnostics = getKcbDiagnostics();
   res.json({
     success: true,
-    configured: isMpesaConfigured(),
+    configured: isMpesaConfigured().configured,
     env: process.env.KCB_BUNI_ENV ? 'SET' : 'MISSING',
     consumerKey: process.env.KCB_BUNI_CONSUMER_KEY ? 'SET' : 'MISSING',
     consumerSecret: process.env.KCB_BUNI_CONSUMER_SECRET ? 'SET' : 'MISSING',
@@ -35,7 +35,7 @@ router.get('/status', authMiddleware, (req, res) => {
 
 router.get('/test-connection', authMiddleware, async (req, res) => {
   try {
-    if (!isMpesaConfigured()) {
+    if (!isMpesaConfigured().configured) {
       return res.status(503).json({ success: false, error: 'KCB not fully configured' });
     }
     const result = await testKcbConnection();
@@ -61,10 +61,11 @@ router.post('/stkpush', async (req, res) => {
       });
     }
 
-    if (!isMpesaConfigured()) {
+    const configCheck = isMpesaConfigured();
+    if (!configCheck.configured) {
       return res.status(503).json({
         success: false,
-        error: 'M-Pesa is not configured. Add credentials to backend/.env'
+        error: 'M-Pesa is not configured. Missing: ' + configCheck.missing.join(', ')
       });
     }
 
@@ -190,10 +191,11 @@ router.post('/pay-booking/:bookingId', async (req, res) => {
       });
     }
 
-    if (!isMpesaConfigured()) {
+    const configCheck = isMpesaConfigured();
+    if (!configCheck.configured) {
       return res.status(503).json({
         success: false,
-        error: 'M-Pesa is not configured'
+        error: 'M-Pesa is not configured. Missing: ' + configCheck.missing.join(', ')
       });
     }
 

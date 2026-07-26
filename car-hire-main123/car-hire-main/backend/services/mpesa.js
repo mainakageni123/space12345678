@@ -294,10 +294,17 @@ const queryStkStatus = async () => ({
   ResultDesc: 'Pending'
 });
 
-const isMpesaConfigured = () =>
-  Boolean(
-    KCB_CONSUMER_KEY && KCB_CONSUMER_SECRET && KCB_ACCOUNT_NUMBER && KCB_CALLBACK_URL
-  );
+const isMpesaConfigured = () => {
+  const missing = [];
+  if (!KCB_CONSUMER_KEY) missing.push('KCB_BUNI_CONSUMER_KEY');
+  if (!KCB_CONSUMER_SECRET) missing.push('KCB_BUNI_CONSUMER_SECRET');
+  if (!KCB_ACCOUNT_NUMBER) missing.push('KCB_BUNI_ACCOUNT_NUMBER');
+  if (!KCB_CALLBACK_URL) missing.push('KCB_BUNI_CALLBACK_URL');
+  return {
+    configured: missing.length === 0,
+    missing
+  };
+};
 
 const testKcbConnection = async () => {
   const token = await getAccessToken();
