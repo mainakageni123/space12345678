@@ -42,6 +42,9 @@ mongoose.set('strictQuery', false);
 // Initialize Express app
 const app = express();
 
+// Trust Vercel / reverse proxies so rate-limiters get true client IPs from X-Forwarded-For
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },

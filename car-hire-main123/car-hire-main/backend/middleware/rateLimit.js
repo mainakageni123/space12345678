@@ -26,17 +26,17 @@ const makeHandler = (label) => (req, res) => {
 // ─── 1. Global fallback (all /api/* routes) ───────────────────────────────────
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200,
-    standardHeaders: true,   // Return RateLimit-* headers (RFC 6585)
+    max: 1000,
+    standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('GLOBAL'),
-    skip: (req) => req.path === '/health' // never block health checks
+    skip: (req) => req.path === '/health'
 });
 
 // ─── 2. Auth limiter (login / token endpoints) ───────────────────────────────
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10, // only 10 login attempts per 15 minutes per IP
+    max: 50,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('AUTH'),
@@ -49,7 +49,7 @@ const authLimiter = rateLimit({
 // ─── 3. Payment limiter (M-Pesa STK push & payment initiation) ───────────────
 const paymentLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 20,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('PAYMENT'),
@@ -62,7 +62,7 @@ const paymentLimiter = rateLimit({
 // ─── 4. Booking limiter (booking creation) ───────────────────────────────────
 const bookingLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 30,
+    max: 150,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('BOOKING'),
@@ -75,7 +75,7 @@ const bookingLimiter = rateLimit({
 // ─── 5. Admin limiter (admin dashboard API) ──────────────────────────────────
 const adminLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 500,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('ADMIN')
@@ -84,17 +84,16 @@ const adminLimiter = rateLimit({
 // ─── 6. Public read limiter (vehicles, adventures listing) ───────────────────
 const publicReadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('PUBLIC_READ')
 });
 
 // ─── 7. Webhook limiter (M-Pesa callbacks from Safaricom servers) ─────────────
-// High ceiling — Safaricom's servers may send many concurrent callbacks
 const webhookLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 500,
+    max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
     handler: makeHandler('WEBHOOK')
