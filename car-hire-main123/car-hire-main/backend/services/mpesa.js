@@ -5,7 +5,7 @@ const axiosKcb = axios.create({ timeout: KCB_HTTP_TIMEOUT_MS });
 
 let configLogged = false;
 
-const envTrim = (value) => String(value || '').trim();
+const envTrim = (value) => String(value || '').trim().replace(/^["']|["']$/g, '');
 
 const KCB_CONSUMER_KEY = envTrim(process.env.KCB_BUNI_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY);
 const KCB_CONSUMER_SECRET = envTrim(process.env.KCB_BUNI_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET);
@@ -63,7 +63,7 @@ const logKcbConfig = () => {
     accountNumber: KCB_ACCOUNT_NUMBER ? 'SET' : 'MISSING',
     callbackUrl: KCB_CALLBACK_URL ? 'SET' : 'MISSING',
     baseUrl: getKcbBaseUrl(),
-    tokenUrl: getTokenUrl().split('?')[0],
+    tokenUrl: getTokenUrl(),
     stkUrl: getStkPushUrl()
   });
 };
@@ -72,11 +72,11 @@ const formatKcbError = (err) => {
   const code = err.code || err.cause?.code;
   if (code === 'ETIMEDOUT' || code === 'ECONNABORTED') {
     return useKcbLive()
-      ? 'Could not reach KCB payment servers from this host. Ask KCB (buni@kcbgroup.com) to whitelist Netlify/AWS outbound IPs for your Paybill.'
+      ? 'Could not reach KCB payment servers from this host. Ask KCB (buni@kcbgroup.com) to whitelist Netlify/AWS/Vercel outbound IPs for your Paybill.'
       : 'KCB test server timed out. Cloud hosts are often blocked — use UAT from a local machine or ask KCB to whitelist your server IP.';
   }
   if (code === 'ENOTFOUND' || code === 'ECONNREFUSED') {
-    return 'Could not reach KCB. Set KCB_BUNI_BASE_URL or check KCB_BUNI_ENV in Netlify environment variables.';
+    return 'Could not reach KCB. Set KCB_BUNI_BASE_URL or check KCB_BUNI_ENV in environment variables.';
   }
   const data = err.response?.data;
   const msg =
@@ -88,12 +88,11 @@ const formatKcbError = (err) => {
     err.message;
 
   const text = String(msg || '');
-  if (/oauth client could not be found|invalid_client|unauthorized_client/i.test(text)) {
-    const mode = useKcbLive() ? 'live (api.buni)' : 'UAT (uat.buni)';
+  if (/oauth client could not be found|invalid_client|unauthorized_client|invalid credentials/i.test(text)) {
+    const mode = useKcbLive() ? 'live' : 'UAT';
     return (
-      `KCB rejected your Consumer Key on ${mode}. ` +
-      'In Netlify: copy KCB_BUNI_CONSUMER_KEY and SECRET exactly from Buni (PROD KEYS tab if KCB_BUNI_ENV starts with prod). ' +
-      'Redeploy after changing env vars.'
+      `Invalid Credentials on ${mode} mode. ` +
+      'Ensure PROD KEYS (Consumer Key & Secret) from Buni portal (DefaultApplication -> PROD KEYS) are set in Vercel environment variables without extra spaces or quotes.'
     );
   }
   return text;
@@ -108,6 +107,7 @@ const getKcbDiagnostics = () => {
   return {
     mode: useKcbLive() ? 'live' : 'uat',
     baseUrl: getKcbBaseUrl(),
+    tokenUrl: getTokenUrl(),
     envValue: KCB_ENV || null,
     accountNumber: KCB_ACCOUNT_NUMBER || null,
     invoiceNumberFormat: KCB_ACCOUNT_NUMBER
@@ -168,50 +168,56 @@ const getAccessToken = async () => {
   if (!KCB_CONSUMER_KEY || !KCB_CONSUMER_SECRET) {
     throw new Error('KCB Buni API credentials not configured');
   }
-  if (!KCB_ENV) {
-    console.warn('[KCB] KCB_BUNI_ENV is not set — using UAT base URL');
-  }
 
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
-  const tokenUrl = getTokenUrl();
+  const primaryTokenUrl = getTokenUrl();
 
-  console.log('[KCB] Token request:', {
-    url: tokenUrl,
-    keyPreview: KCB_CONSUMER_KEY.slice(0, 6) + '...',
-    mode: useKcbLive() ? 'PRODUCTION' : 'UAT'
-  });
+  const endpointsToTry = [
+    { url: `${primaryTokenUrl}?grant_type=client_credentials`, body: 'grant_type=client_credentials' },
+    { url: primaryTokenUrl, body: 'grant_type=client_credentials' },
+    { url: 'https://api.buni.kcbgroup.com/token?grant_type=client_credentials', body: 'grant_type=client_credentials' }
+  ];
 
-  try {
-    // OAuth2 client_credentials: grant_type ALWAYS goes in the POST body, not the URL
-    const response = await axiosKcb.post(
-      tokenUrl,
-      'grant_type=client_credentials',
-      {
-        headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }
-    );
-    const token = response.data?.access_token || response.data?.accessToken;
-    if (!token) {
-      console.error('[KCB] Token response body:', JSON.stringify(response.data));
-      throw new Error('KCB token response did not include access_token');
-    }
-    console.log('[KCB] Token obtained successfully');
-    return token;
-  } catch (err) {
-    const status = err.response?.status;
-    const body = err.response?.data;
-    console.error('[KCB] Token request failed:', {
-      status,
-      body: JSON.stringify(body || {}),
-      code: err.code,
-      url: tokenUrl
+  let lastError = null;
+
+  for (const endpoint of endpointsToTry) {
+    console.log('[KCB] Token request attempt:', {
+      url: endpoint.url,
+      keyPreview: KCB_CONSUMER_KEY.slice(0, 6) + '...',
+      mode: useKcbLive() ? 'PRODUCTION' : 'UAT'
     });
-    const msg = formatKcbError(err);
-    throw new Error(msg);
+
+    try {
+      const response = await axiosKcb.post(
+        endpoint.url,
+        endpoint.body,
+        {
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
+      const token = response.data?.access_token || response.data?.accessToken;
+      if (token) {
+        console.log('[KCB] Token obtained successfully from endpoint:', endpoint.url);
+        return token;
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn('[KCB] Token endpoint attempt failed:', endpoint.url, err.response?.status, err.response?.data || err.message);
+    }
   }
+
+  const status = lastError?.response?.status;
+  const body = lastError?.response?.data;
+  console.error('[KCB] All Token request attempts failed:', {
+    status,
+    body: JSON.stringify(body || {}),
+    code: lastError?.code
+  });
+  const msg = formatKcbError(lastError);
+  throw new Error(msg);
 };
 
 /**
