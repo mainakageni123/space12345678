@@ -28,17 +28,14 @@ const getKcbBaseUrl = () => {
 const getTokenUrl = () => {
   let url = process.env.KCB_BUNI_TOKEN_URL || '';
   if (url) {
-    url = url.split('?')[0].trim();
-    // Auto-fix legacy or incorrect token URLs pointing to api.buni instead of accounts.buni
-    if (url.includes('api.buni.kcbgroup.com')) {
-      url = 'https://accounts.buni.kcbgroup.com/oauth2/token';
-    }
-    return url;
+    return url.split('?')[0].trim();
   }
   if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
     return process.env.KCB_BUNI_UAT_TOKEN_URL.split('?')[0].trim();
   }
-  return 'https://accounts.buni.kcbgroup.com/oauth2/token';
+  return useKcbLive()
+    ? 'https://api.buni.kcbgroup.com/token'
+    : 'https://accounts.buni.kcbgroup.com/oauth2/token';
 };
 
 const getStkPushUrl = () => {
@@ -174,9 +171,10 @@ const getAccessToken = async () => {
 
   const auth = Buffer.from(`${KCB_CONSUMER_KEY}:${KCB_CONSUMER_SECRET}`).toString('base64');
   const primaryTokenUrl = getTokenUrl();
-
   const endpointsToTry = [
-    { url: primaryTokenUrl, body: 'grant_type=client_credentials' }
+    { url: primaryTokenUrl, body: 'grant_type=client_credentials' },
+    { url: 'https://api.buni.kcbgroup.com/token', body: 'grant_type=client_credentials' },
+    { url: 'https://accounts.buni.kcbgroup.com/oauth2/token', body: 'grant_type=client_credentials' }
   ];
 
   let lastError = null;
