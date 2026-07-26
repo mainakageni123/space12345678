@@ -11,6 +11,7 @@ import SystemHealth from './components/SystemHealth';
 import CustomerAnalytics from './components/CustomerAnalytics';
 import AdventureManagement from './components/AdventureManagement';
 import BookingList from './components/BookingList';
+import PaymentTransactions from './components/PaymentTransactions';
 import AdminAuthModal from './components/AdminAuthModal';
 import AdminUserManagement from './components/AdminUserManagement';
 
@@ -44,6 +45,7 @@ const AdminCommandCenter = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: 'LayoutDashboard' },
     { id: 'bookings', label: 'Bookings', icon: 'Calendar' },
+    { id: 'payments', label: 'Payments & Buni', icon: 'CreditCard' },
     { id: 'fleet', label: 'Fleet', icon: 'Car' },
     { id: 'adventures', label: 'Adventures', icon: 'MapPin' },
     { 
@@ -130,6 +132,8 @@ const AdminCommandCenter = () => {
         );
       case 'bookings':
         return <BookingList />;
+      case 'payments':
+        return <PaymentTransactions />;
       case 'fleet':
         return (
           <div className="space-y-8">

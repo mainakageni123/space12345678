@@ -95,8 +95,10 @@ const BookingMpesaPay = ({
         if (data.success && data.data) {
           const { ResultCode, ResultDesc } = data.data;
 
+          const code = String(ResultCode);
+          
           // ResultCode 0 means success
-          if (ResultCode === '0' || ResultCode === 0) {
+          if (code === '0') {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
             setLoading(false);
@@ -111,13 +113,41 @@ const BookingMpesaPay = ({
                 message: 'Payment received successfully'
               });
             }
-          } else if (ResultCode !== '1032' && ResultCode !== 1032) {
-            // Any result code other than 0 or 1032 means failure
+          } else if (code === '1032') {
+            // User cancelled transaction on phone
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
             setLoading(false);
             setStatus(null);
-            setError(ResultDesc || 'Payment failed. Please try again.');
+            setError('Payment cancelled: Transaction prompt was cancelled on your phone.');
+          } else if (code === '1' || code === '2001') {
+            // Wrong PIN
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setLoading(false);
+            setStatus(null);
+            setError('Payment failed: Incorrect PIN entered on your phone. Please try again.');
+          } else if (code === '1001') {
+            // Insufficient funds
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setLoading(false);
+            setStatus(null);
+            setError('Payment failed: Insufficient M-Pesa account balance.');
+          } else if (code === '1037' || code === '1025') {
+            // Phone unreachable / timeout
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setLoading(false);
+            setStatus(null);
+            setError('Payment failed: Phone was unreachable or PIN entry timed out.');
+          } else if (code !== 'undefined' && code !== 'null' && code !== '') {
+            // Any other explicit failure code from M-Pesa
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setLoading(false);
+            setStatus(null);
+            setError(ResultDesc || `Payment failed (Error code: ${code}). Please try again.`);
           }
         }
 

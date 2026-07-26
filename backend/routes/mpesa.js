@@ -168,6 +168,42 @@ router.post('/query', async (req, res) => {
   }
 });
 
+router.get('/admin/transactions', authMiddleware, async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate({
+        path: 'bookingId',
+        select: 'customerName vehicleName vehiclePrice status paymentStatus createdAt'
+      })
+      .sort({ createdAt: -1 })
+      .limit(200);
+
+    const totalRevenue = payments
+      .filter((p) => p.status === 'completed')
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    const completedCount = payments.filter((p) => p.status === 'completed').length;
+    const pendingCount = payments.filter((p) => p.status === 'pending').length;
+    const failedCount = payments.filter((p) => p.status === 'failed' || p.status === 'cancelled').length;
+
+    res.status(200).json({
+      success: true,
+      summary: {
+        totalRevenue,
+        totalTransactions: payments.length,
+        completedCount,
+        pendingCount,
+        failedCount,
+        provider: 'KCB Buni M-Pesa Gateway'
+      },
+      payments
+    });
+  } catch (error) {
+    console.error('Admin transactions fetch error:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch payment transactions' });
+  }
+});
+
 router.post('/pay-booking/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
