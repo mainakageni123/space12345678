@@ -98,6 +98,8 @@ const formatKcbError = (err) => {
   return text;
 };
 
+let lastRawKcbError = null;
+
 const getKcbDiagnostics = () => {
   const rawKey = process.env.KCB_BUNI_CONSUMER_KEY || '';
   const rawSecret = process.env.KCB_BUNI_CONSUMER_SECRET || '';
@@ -118,6 +120,10 @@ const getKcbDiagnostics = () => {
     consumerKeyPreview: KCB_CONSUMER_KEY
       ? `${KCB_CONSUMER_KEY.slice(0, 4)}…${KCB_CONSUMER_KEY.slice(-4)}`
       : null,
+    consumerSecretPreview: KCB_CONSUMER_SECRET
+      ? `${KCB_CONSUMER_SECRET.slice(0, 4)}…${KCB_CONSUMER_SECRET.slice(-4)}`
+      : null,
+    lastKcbError: lastRawKcbError,
     keyHadWhitespace,
     secretHadWhitespace,
     hint: useKcbLive()
@@ -205,6 +211,11 @@ const getAccessToken = async () => {
       }
     } catch (err) {
       lastError = err;
+      lastRawKcbError = {
+        status: err.response?.status,
+        data: err.response?.data || err.message,
+        url: endpoint.url
+      };
       console.warn('[KCB] Token endpoint attempt failed:', endpoint.url, err.response?.status, err.response?.data || err.message);
     }
   }

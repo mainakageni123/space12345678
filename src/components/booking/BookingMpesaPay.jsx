@@ -277,8 +277,17 @@ const BookingMpesaPay = ({
               <div className="font-semibold uppercase tracking-wider mb-1 text-[10px] opacity-80">System Diagnostics</div>
               <div>Mode: {diagnostics.mode}</div>
               <div>Base URL: {diagnostics.baseUrl}</div>
+              {diagnostics.tokenUrl && <div>Token URL: {diagnostics.tokenUrl}</div>}
               <div>Env Value: {diagnostics.envValue || 'NOT SET'}</div>
               <div>Key preview: {diagnostics.consumerKeyPreview || 'N/A'} (len: {diagnostics.consumerKeyLength || 0})</div>
+              {diagnostics.consumerSecretPreview && (
+                <div>Secret preview: {diagnostics.consumerSecretPreview} (len: {diagnostics.consumerSecretLength || 0})</div>
+              )}
+              {diagnostics.lastKcbError && (
+                <div className="text-[10px] bg-red-100 dark:bg-red-900/40 p-1.5 rounded mt-1 overflow-x-auto">
+                  Raw Response: {JSON.stringify(diagnostics.lastKcbError.data || diagnostics.lastKcbError)}
+                </div>
+              )}
               {diagnostics.keyHadWhitespace && <div className="text-amber-500 font-bold">⚠️ Warning: Consumer Key has leading/trailing spaces!</div>}
               {diagnostics.secretHadWhitespace && <div className="text-amber-500 font-bold">⚠️ Warning: Consumer Secret has leading/trailing spaces!</div>}
               {diagnostics.hint && <div className="mt-1 italic opacity-90">Hint: {diagnostics.hint}</div>}
