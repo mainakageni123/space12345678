@@ -291,10 +291,27 @@ const initiateStkPush = async ({
       formattedPhone
     };
   } catch (err) {
-    // Print the raw STK push rejection payload from KCB!
-    console.error('[KCB] Raw STK push error payload:', JSON.stringify(err.response?.data || {}));
+    // ===== AGGRESSIVE RAW ERROR LOGGING =====
+    // Log EVERYTHING KCB sent back, BEFORE any formatting
+    const rawStatus = err.response?.status;
+    const rawData = err.response?.data;
+    const rawHeaders = err.response?.headers;
+    console.error('========== KCB STK PUSH RAW ERROR START ==========');
+    console.error('[KCB] STK push HTTP status:', rawStatus);
+    console.error('[KCB] STK push raw response body:', JSON.stringify(rawData, null, 2));
+    console.error('[KCB] STK push response headers:', JSON.stringify(rawHeaders || {}));
+    console.error('[KCB] STK push axios error code:', err.code);
+    console.error('[KCB] STK push axios error message:', err.message);
+    console.error('========== KCB STK PUSH RAW ERROR END ==========');
+
+    // Also capture for diagnostics
+    lastRawKcbError = {
+      status: rawStatus,
+      data: rawData || err.message,
+      headers: rawHeaders
+    };
+
     const msg = formatKcbError(err);
-    console.error('[KCB] STK push failed:', msg, err.code || '');
     throw new Error(msg);
   }
 };
