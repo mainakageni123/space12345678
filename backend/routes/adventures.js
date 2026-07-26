@@ -35,6 +35,8 @@ router.get('/', async (req, res) => {
             console.log(`${adv.title}: max=${adv.maxParticipants}, booked=${adv.bookedSeats}, available=${adv.availableSeats}`);
         });
         
+        // Set Cache-Control headers for Edge CDN caching
+        res.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         res.json({ success: true, adventures: updatedAdventures });
     } catch (e) {
         res.status(500).json({ success: false, message: e.message });
