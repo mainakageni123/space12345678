@@ -54,7 +54,7 @@ adminSchema.methods.generateAuthToken = function() {
     const jwt = require('jsonwebtoken');
     return jwt.sign(
         { id: this._id, username: this.username, role: this.role },
-        process.env.JWT_SECRET || 'your-secret-key',
+        process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })(),
         { expiresIn: '24h' }
     );
 };

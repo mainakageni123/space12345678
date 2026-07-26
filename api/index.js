@@ -14,11 +14,25 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const compression = require('compression');
 const mongoSanitize = require('express-mongo-sanitize');
+const {
+    globalLimiter,
+    authLimiter,
+    paymentLimiter,
+    bookingLimiter,
+    adminLimiter,
+    publicReadLimiter,
+    webhookLimiter
+} = require('../backend/middleware/rateLimit');
 
-// Load environment variables (mostly for local testing, Vercel will inject them)
+// Load environment variables (local only — Vercel injects them directly)
 require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
+
+// ── Security guard: fail loudly if JWT_SECRET is missing ──────────────────────
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Admin authentication will be insecure.');
+}
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGO_URI || '';
@@ -48,21 +62,37 @@ app.use(mongoSanitize());
 // Compression middleware
 app.use(compression());
 
-// CORS configuration (allow Vercel frontend to talk to this API)
+// ── CORS — locked to your Vercel domain ─────────────────────────────────────
+const allowedOrigins = [
+    'https://space12345678.vercel.app',
+    /^https:\/\/space12345678-[a-z0-9]+-spaceborne-s-projects\.vercel\.app$/, // preview deploys
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000'
+];
+
 app.use(cors({
-    origin: '*',
+    origin: (origin, callback) => {
+        // Allow non-browser requests (Safaricom callbacks, curl, Postman)
+        if (!origin) return callback(null, true);
+        const allowed = allowedOrigins.some(o =>
+            typeof o === 'string' ? o === origin : o.test(origin)
+        );
+        if (allowed) return callback(null, true);
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'x-auth-token'],
     exposedHeaders: ['Authorization'],
     credentials: true
 }));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ── Body parsing — tight size limits to prevent DoS ──────────────────────────
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-// Logging middleware
-app.use(morgan('dev'));
+// ── Logging — 'combined' never logs request bodies (no PII leakage) ──────────
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // MongoDB connection (lazy initialization & cached for serverless)
 let isConnected = false;
@@ -120,7 +150,21 @@ const routes = {
     whatsapp: require('../backend/routes/whatsapp-webhook')
 };
 
-// Register all API routes
+// ── Rate Limiters ─────────────────────────────────────────────────────────────
+app.use('/api', globalLimiter);                         // All routes: 200 req/15min
+app.use('/api/admin/login', authLimiter);               // Login brute-force: 10 req/15min
+app.use('/api/admin/auth', authLimiter);                // Auth verify: 10 req/15min
+app.use('/api/mpesa/stkpush', paymentLimiter);          // STK push: 20 req/15min
+app.use('/api/mpesa/pay-booking', paymentLimiter);      // Pay booking: 20 req/15min
+app.use('/api/mpesa/callback', webhookLimiter);         // Safaricom callbacks: 500 req/15min
+app.use('/api/bookings', bookingLimiter);               // Booking creation: 30 req/15min
+app.use('/api/adventure-bookings', bookingLimiter);     // Adventure booking: 30 req/15min
+app.use('/api/psv-bookings', bookingLimiter);           // PSV booking: 30 req/15min
+app.use('/api/admin', adminLimiter);                    // Admin panel: 100 req/15min
+app.use('/api/vehicles', publicReadLimiter);            // Vehicle listing: 300 req/15min
+app.use('/api/adventures', publicReadLimiter);          // Adventure listing: 300 req/15min
+
+// ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/vehicles', routes.vehicles);
 app.use('/api/bookings', routes.bookings);
 app.use('/api/adventure-bookings', routes.adventureBookings);
@@ -138,19 +182,20 @@ app.get('/api/health', (req, res) => {
     res.json({ success: true, status: 'ok', environment: 'vercel-serverless' });
 });
 
-// Options handling
-app.options('*', (req, res) => {
-    res.status(204).end();
-});
+// Options preflight
+app.options('*', cors());
 
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ message: 'API Route not found' });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-    console.error('API Error:', err.stack);
+// Global error handler — never leak stack traces to clients
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+    if (err.message && err.message.startsWith('CORS:')) {
+        return res.status(403).json({ success: false, message: 'Forbidden: cross-origin request blocked' });
+    }
+    console.error('API Error:', err.message);
     res.status(500).json({ success: false, message: 'Internal server error' });
 });
 

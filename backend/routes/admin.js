@@ -151,7 +151,7 @@ router.post('/change-password', authMiddleware, async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })());
         
         // Find admin user
         const admin = await Admin.findById(decoded.id);
@@ -186,7 +186,7 @@ router.get('/verify', async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })());
         
         const admin = await Admin.findById(decoded.id);
         if (!admin) {

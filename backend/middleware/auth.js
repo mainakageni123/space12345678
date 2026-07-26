@@ -14,7 +14,7 @@ const authMiddleware = async (req, res, next) => {
 
         // Verify token
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })());
         
         // Check if admin still exists
         const admin = await Admin.findById(decoded.id).select('-password');

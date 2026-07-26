@@ -28,7 +28,7 @@ router.post('/login', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { id: admin._id },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })(),
             { expiresIn: '24h' }
         );
 
@@ -58,7 +58,7 @@ router.get('/verify', async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is not configured'); })());
         const admin = await Admin.findById(decoded.id).select('-password');
         
         if (!admin) {
@@ -72,3 +72,4 @@ router.get('/verify', async (req, res) => {
 });
 
 module.exports = router;
+
