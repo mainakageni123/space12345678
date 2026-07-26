@@ -26,19 +26,19 @@ const getKcbBaseUrl = () => {
 // Returns the OAuth2 token URL — NEVER appends grant_type to the URL;
 // it always goes in the POST body (OAuth2 spec / KCB Buni requirement).
 const getTokenUrl = () => {
-  // 1. Explicit override via env var (no modification)
-  if (process.env.KCB_BUNI_TOKEN_URL) {
-    return process.env.KCB_BUNI_TOKEN_URL.split('?')[0]; // strip any stale query params
+  let url = process.env.KCB_BUNI_TOKEN_URL || '';
+  if (url) {
+    url = url.split('?')[0].trim();
+    // Auto-fix legacy or incorrect token URLs pointing to api.buni instead of accounts.buni
+    if (url.includes('api.buni.kcbgroup.com')) {
+      url = 'https://accounts.buni.kcbgroup.com/oauth2/token';
+    }
+    return url;
   }
-  // 2. UAT-specific override
   if (!useKcbLive() && process.env.KCB_BUNI_UAT_TOKEN_URL) {
-    return process.env.KCB_BUNI_UAT_TOKEN_URL.split('?')[0];
+    return process.env.KCB_BUNI_UAT_TOKEN_URL.split('?')[0].trim();
   }
-  // 3. Correct defaults: accounts.buni.kcbgroup.com (OAuth2 endpoint)
-  //    api.buni.kcbgroup.com is for the STK push, NOT the token.
-  return useKcbLive()
-    ? 'https://accounts.buni.kcbgroup.com/oauth2/token'
-    : 'https://accounts.buni.kcbgroup.com/oauth2/token'; // same host for UAT tokens too
+  return 'https://accounts.buni.kcbgroup.com/oauth2/token';
 };
 
 const getStkPushUrl = () => {
