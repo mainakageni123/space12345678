@@ -88,13 +88,10 @@ const formatKcbError = (err) => {
     err.message;
 
   const text = String(msg || '');
-  if (/oauth client could not be found|invalid_client|unauthorized_client|invalid credentials/i.test(text)) {
-    const mode = useKcbLive() ? 'live' : 'UAT';
-    return (
-      `Invalid Credentials on ${mode} mode. ` +
-      'Ensure PROD KEYS (Consumer Key & Secret) from Buni portal (DefaultApplication -> PROD KEYS) are set in Vercel environment variables without extra spaces or quotes.'
-    );
+  if (text && text.length < 200) {
+    return text; // Return the exact error KCB sent back!
   }
+  return text;
   return text;
 };
 
@@ -179,9 +176,7 @@ const getAccessToken = async () => {
   const primaryTokenUrl = getTokenUrl();
 
   const endpointsToTry = [
-    { url: `${primaryTokenUrl}?grant_type=client_credentials`, body: 'grant_type=client_credentials' },
-    { url: primaryTokenUrl, body: 'grant_type=client_credentials' },
-    { url: 'https://api.buni.kcbgroup.com/token?grant_type=client_credentials', body: 'grant_type=client_credentials' }
+    { url: primaryTokenUrl, body: 'grant_type=client_credentials' }
   ];
 
   let lastError = null;
@@ -296,6 +291,8 @@ const initiateStkPush = async ({
       formattedPhone
     };
   } catch (err) {
+    // Print the raw STK push rejection payload from KCB!
+    console.error('[KCB] Raw STK push error payload:', JSON.stringify(err.response?.data || {}));
     const msg = formatKcbError(err);
     console.error('[KCB] STK push failed:', msg, err.code || '');
     throw new Error(msg);
