@@ -11,11 +11,13 @@ const PSVProfessionalServices = () => {
   return (
     <>
       <Helmet>
-        <title>Professional PSV & Corporate Travel Services | SpaceBorne</title>
-        <meta name="description" content="Premium corporate transit, group travel, and luxury PSV options. Tailored chauffeur services and VIP executive travel in Kenya." />
-        <meta name="keywords" content="PSV services, corporate transport, chauffeur car hire, group tours transit, SpaceBorne transport" />
-        <meta property="og:title" content="SpaceBorne - Professional PSV Services" />
-        <meta property="og:description" content="Premium corporate and executive transit solutions. Professional chauffeurs and group travel." />
+        <title>Executive Chauffeur & PSV Corporate Transport Nairobi | SpaceBorne LTD</title>
+        <meta name="description" content="Premium corporate transit, group travel, and luxury PSV options in Nairobi. Professional chauffeurs and VIP executive travel in Kenya." />
+        <meta name="keywords" content="PSV services Kenya, corporate transport Nairobi, chauffeur car hire Nairobi, VIP executive transfer, SpaceBorne PSV" />
+        <meta property="og:title" content="SpaceBorne LTD - Executive PSV & Chauffeur Services" />
+        <meta property="og:description" content="Premium corporate and executive transit solutions in Kenya. Professional chauffeurs and group travel." />
+        <meta property="og:url" content="https://spaceborneltd.com/psv-professional-services" />
+        <link rel="canonical" href="https://spaceborneltd.com/psv-professional-services" />
       </Helmet>
       <div className="min-h-screen bg-surface-premium">
         <Header />

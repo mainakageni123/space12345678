@@ -150,11 +150,13 @@ const FleetDiscovery = () => {
   return (
     <>
       <Helmet>
-        <title>Explore Our Fleet | Premium Vehicle Rentals | SpaceBorne</title>
-        <meta name="description" content="Discover premium, luxury, and adventure vehicles for hire at SpaceBorne. Compare cars, view clear pricing, and book your rental instantly." />
-        <meta name="keywords" content="car hire Kenya, vehicle rentals, luxury cars, hire SUV, SpaceBorne fleet" />
-        <meta property="og:title" content="SpaceBorne - Premium Vehicle Fleet" />
-        <meta property="og:description" content="Compare and rent premium vehicles instantly. Clear daily rates and high-quality cars." />
+        <title>Car Rental Fleet | Rent Luxury Cars & SUVs in Nairobi | SpaceBorne LTD</title>
+        <meta name="description" content="Discover premium, luxury, and SUV vehicles for hire in Nairobi, Kenya. Toyota Prado, Mercedes-Benz, Audi, and Land Cruiser with clear daily rates." />
+        <meta name="keywords" content="car hire Nairobi, vehicle rentals Kenya, luxury car rental, rent Prado Nairobi, Land Cruiser hire, SpaceBorne fleet" />
+        <meta property="og:title" content="SpaceBorne LTD - Premium Vehicle Fleet" />
+        <meta property="og:description" content="Compare and rent premium vehicles instantly in Nairobi. Clear daily rates and pristine vehicles." />
+        <meta property="og:url" content="https://spaceborneltd.com/fleet-discovery" />
+        <link rel="canonical" href="https://spaceborneltd.com/fleet-discovery" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />

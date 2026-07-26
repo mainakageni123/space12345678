@@ -17,24 +17,24 @@ const Homepage = () => {
   return (
     <>
       <Helmet>
-        <title>SpaceBorne - Premium Mobility Experiences | Luxury Car Rentals & Trips & Tours</title>
+        <title>SpaceBorne LTD | Premium Car Rental, Safari Tours & PSV Services Kenya</title>
         <meta 
           name="description" 
-          content="Transform your journey with SpaceBorne's premium mobility services. Luxury vehicle rentals, curated trips & tours, and premium PSV services. Every journey deserves to be extraordinary." 
+          content="Experience premium car rentals in Nairobi, Kenya. Self-drive SUV hire, luxury Mercedes-Benz & Audi, safari tours, and executive chauffeur PSV services." 
         />
         <meta 
           name="keywords" 
-          content="luxury car rental, premium vehicles, trips & tours, PSV services, executive transportation, SpaceBorne mobility" 
+          content="SpaceBorne, SpaceBorne LTD, spaceborneltd, car hire Nairobi, car rental Kenya, luxury car hire Nairobi, self drive SUV rental, PSV services Kenya" 
         />
         <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="SpaceBorne - Premium Mobility Experiences" />
+        <meta property="og:title" content="SpaceBorne LTD | Premium Mobility Services Kenya" />
         <meta 
           property="og:description" 
-          content="Discover extraordinary journeys with SpaceBorne's premium mobility solutions. Luxury rentals, curated trips & tours, and premium PSV services." 
+          content="Luxury vehicle rentals, curated safari road trips & tours, and executive PSV chauffeur services in Nairobi, Kenya." 
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://gmail.com/Spacebornentreprices" />
-        <link rel="canonical" href="https://gmail.com/Spacebornentreprices" />
+        <meta property="og:url" content="https://spaceborneltd.com/" />
+        <link rel="canonical" href="https://spaceborneltd.com/" />
       </Helmet>
 
       <div className="min-h-screen bg-surface-premium">

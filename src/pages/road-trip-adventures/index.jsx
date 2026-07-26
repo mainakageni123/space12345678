@@ -168,11 +168,13 @@ const RoadTripAdventures = () => {
   return (
     <>
       <Helmet>
-        <title>Curated Road Trip Adventures & Tours | SpaceBorne</title>
-        <meta name="description" content="Embark on extraordinary road trip adventures across Kenya. Handpicked tour packages, luxury transport, and professional guides." />
-        <meta name="keywords" content="road trips Kenya, tours and travel, Maasai Mara road trip, adventure tours, SpaceBorne travel" />
-        <meta property="og:title" content="SpaceBorne - Road Trip Adventures & Tours" />
-        <meta property="og:description" content="Transform your holiday with curated safari tours and custom road trips across East Africa." />
+        <title>Kenya Safari & Road Trip Adventures | SpaceBorne LTD</title>
+        <meta name="description" content="Embark on extraordinary road trip adventures across Kenya. Handpicked tour packages, safari 4x4 transport, and professional local guides." />
+        <meta name="keywords" content="road trips Kenya, tours and travel Nairobi, Maasai Mara safari road trip, safari car hire, SpaceBorne travel" />
+        <meta property="og:title" content="SpaceBorne LTD - Road Trip Adventures & Safari Tours" />
+        <meta property="og:description" content="Transform your holiday with curated safari tours and custom road trips across Kenya." />
+        <meta property="og:url" content="https://spaceborneltd.com/road-trip-adventures" />
+        <link rel="canonical" href="https://spaceborneltd.com/road-trip-adventures" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
