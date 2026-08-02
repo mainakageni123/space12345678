@@ -350,7 +350,7 @@ router.put('/:id', authMiddleware, multiImageUpload, async (req, res) => {
         res.json(vehicle);
     } catch (error) {
         console.error('Error updating vehicle:', error);
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ success: false, message: error.message || 'Failed to update vehicle' });
     }
 });
 

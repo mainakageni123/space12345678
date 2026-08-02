@@ -321,13 +321,18 @@ const EditVehicle = () => {
         }
       });
 
-      const result = await response.json();
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (err) {
+        console.error('Failed to parse response JSON:', err);
+      }
 
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error('Authentication expired. Please log in again.');
         } else {
-          throw new Error(result.message || 'Failed to update vehicle');
+          throw new Error(result.message || `Server returned error (${response.status}). Please check backend logs or try again.`);
         }
       }
 
